@@ -5,8 +5,8 @@
   "type": "module",
   "description": "Pre-acceptance verifier for OKX.AI A2A task deliverables.",
   "scripts": {
-    "build": "rm -rf dist && mkdir -p dist && cp index.html dist/ && cp -r src dist/src",
-    "preview": "npx wrangler@latest pages dev dist --compatibility-date=2026-07-03",
-    "deploy": "npm run build && npx wrangler@latest pages deploy dist --project-name agentproof"
+    "build": "node build.js",
+    "preview": "npx wrangler pages dev dist --compatibility-date=2026-07-03",
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name agentproof"
   }
 }
