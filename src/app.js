@@ -113,7 +113,7 @@ const I18N = {
       request_revision: ['Request Revision', 'Medium-high risk', 'Ask the provider to supplement missing evidence before acceptance.'],
       reject_ready: ['Reject Ready', 'High risk', 'The deliverable has major gaps and the user should prepare a structured rejection reason.']
     },
-    status: { pass: 'pass', partial: 'partial', missing_evidence: 'missing evidence', fail: 'fail' },
+    status: { pass: 'pass', partial: 'partial', missing_evidence: 'missing evidence', fail: 'fail', not_applicable: 'not applicable' },
     fallbackReasons: {
       pass: 'Most core requirements have supporting evidence in the deliverable.',
       partial: 'Some requirements are mentioned, but the evidence is not detailed enough for confident acceptance.',
@@ -226,7 +226,7 @@ const I18N = {
       request_revision: ['要求修改', '中高风险', '建议先要求服务方补充缺失证据，再考虑验收。'],
       reject_ready: ['可准备拒绝', '高风险', '交付物存在明显缺口，用户应准备结构化拒绝理由。']
     },
-    status: { pass: '通过', partial: '部分满足', missing_evidence: '证据不足', fail: '不满足' },
+    status: { pass: '通过', partial: '部分满足', missing_evidence: '证据不足', fail: '不满足', not_applicable: '不适用' },
     fallbackReasons: {
       pass: '多数核心要求在交付物中找到了支持证据。',
       partial: '部分要求被提到，但证据不够具体，直接验收仍有不确定性。',
@@ -458,8 +458,10 @@ function renderSimpleList(selector, items) {
 
 function buildScoreBasisLines(report) {
   const basis = report.scoreBasis || {};
+  const summary = report.applicabilitySummary || {};
   if (currentLang === 'zh') {
     return [
+      `计分项：${summary.scored || 0} · 建议项：${summary.advisory || 0} · 不适用：${summary.notApplicable || 0}`,
       `规格匹配：${basis.specMatch?.pass || 0} 通过 / ${basis.specMatch?.partial || 0} 部分 / ${basis.specMatch?.missingEvidence || 0} 证据不足`,
       `验收满足：${basis.acceptanceMet?.pass || 0} 通过 / ${basis.acceptanceMet?.partial || 0} 部分 / ${basis.acceptanceMet?.missingEvidence || 0} 证据不足`,
       `功能正确性：${basis.functionalCorrectness?.pass || 0} 通过 / ${basis.functionalCorrectness?.partial || 0} 部分 / ${basis.functionalCorrectness?.missingEvidence || 0} 证据不足`,
@@ -467,6 +469,7 @@ function buildScoreBasisLines(report) {
     ];
   }
   return [
+    `Scored: ${summary.scored || 0} · Advisory: ${summary.advisory || 0} · Not applicable: ${summary.notApplicable || 0}`,
     `Spec match: ${basis.specMatch?.pass || 0} pass / ${basis.specMatch?.partial || 0} partial / ${basis.specMatch?.missingEvidence || 0} missing`,
     `Acceptance met: ${basis.acceptanceMet?.pass || 0} pass / ${basis.acceptanceMet?.partial || 0} partial / ${basis.acceptanceMet?.missingEvidence || 0} missing`,
     `Functional correctness: ${basis.functionalCorrectness?.pass || 0} pass / ${basis.functionalCorrectness?.partial || 0} partial / ${basis.functionalCorrectness?.missingEvidence || 0} missing`,
@@ -584,7 +587,9 @@ function displayEvidenceText(value) {
     .replace('Found evidence keywords:', '发现证据关键词：')
     .replace('Partial signal detected:', '发现部分信号：')
     .replace('No clear supporting evidence found in the deliverable text.', '当前交付物中未找到清晰支持证据。')
-    .replace('No deliverable text was provided.', '未提供交付物正文。');
+    .replace('No deliverable text was provided.', '未提供交付物正文。')
+    .replace('This criterion was not triggered by the provided task materials.', '该标准未被当前任务材料触发。')
+    .replace('Optional advisory criterion; no scoring evidence required.', '可选建议项，不需要计分证据。');
 }
 
 function displayIssueText(value) {
@@ -596,12 +601,14 @@ function displayIssueText(value) {
     .replace('Source is mentioned but not directly usable.', '提到了来源或市场，但缺少可直接使用的链接。')
     .replace('Probability is given but reasoning is thin.', '提供了概率，但推理依据不够充分。')
     .replace('No market/source link is provided.', '未提供市场或来源链接。')
-    .replace('No risk or uncertainty note is provided.', '未提供风险或不确定性说明。');
+    .replace('No risk or uncertainty note is provided.', '未提供风险或不确定性说明。')
+    .replace('Not applicable to the current task scope.', '不适用于当前任务范围。')
+    .replace('Optional advisory item.', '可选建议项。');
 }
 
 function renderCoverage(rows) {
   $('#coverageRows').innerHTML = rows.map((row) => {
-    const meta = `${dimensionLabel(row.dimension)} · ${severityLabel(row.severity)}`;
+    const meta = `${dimensionLabel(row.dimension)} · ${severityLabel(row.severity)}${row.scoreIncluded === false ? ' · ' + (currentLang === 'zh' ? '不计分' : 'not scored') : ''}`;
     const requirement = displayRequirementText(row.requirement);
     const evidence = displayEvidenceText(row.evidence);
     const issue = displayIssueText(row.issue);

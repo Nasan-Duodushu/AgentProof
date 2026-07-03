@@ -7,7 +7,7 @@ const DIMENSIONS = {
   professionalStandard: { label: 'Professional standard', max: 10 }
 };
 
-const SCORE_VALUE = { pass: 1, partial: 0.5, missing_evidence: 0, fail: 0 };
+const SCORE_VALUE = { pass: 1, partial: 0.5, missing_evidence: 0, fail: 0, not_applicable: 0 };
 const REQUIREMENT_PATTERN = /(must|should|required|requires|include|includes|provide|deliver|acceptance|criteria|need|needs|必须|需要|包含|包括|提供|交付|验收|标准|要求)/i;
 const STOP_WORDS = ['the', 'and', 'for', 'with', 'that', 'this', 'must', 'should', 'provide', 'include', 'deliver', 'report'];
 
@@ -269,6 +269,16 @@ const OKX_ALIGNMENT = {
   doesNotReplaceArbitration: true
 };
 
+const APPLICABILITY_RULES = {
+  fresh_data: { requiredness: 'conditional', triggerKeywords: ['latest', 'current', 'timestamp', 'schedule', 'fixture', '最新', '当前', '时间戳', '赛程'] },
+  market_link: { requiredness: 'conditional', triggerKeywords: ['polymarket', 'market link', 'prediction market', 'source link', '市场链接', '预测市场', '来源链接'] },
+  cost_model: { requiredness: 'conditional', triggerKeywords: ['gas', 'slippage', 'bridge', 'fee', 'cost', '手续费', '滑点', '跨链', '成本'] },
+  test_evidence: { requiredness: 'conditional', triggerKeywords: ['test', 'validation', 'log', 'screenshot', '测试', '验证', '日志', '截图'] },
+  error_handling: { requiredness: 'optional', triggerKeywords: ['error', 'edge case', 'fallback', '错误', '边界', '异常'] },
+  safety_boundary: { requiredness: 'conditional', triggerKeywords: ['health', 'medical', 'legal', 'finance', 'allergy', 'risk', '医疗', '法律', '过敏', '风险'] },
+  source_assets: { requiredness: 'conditional', triggerKeywords: ['source file', 'editable', 'figma', 'psd', '源文件', '可编辑'] }
+};
+
 const ACTIONS = [
   { min: 80, verdict: 'accept', label: 'Accept', risk: 'Low risk', summary: 'The deliverable appears ready for acceptance.' },
   { min: 75, verdict: 'minor_revision', label: 'Minor Revision', risk: 'Medium risk', summary: 'The deliverable is mostly complete but should be supplemented before final acceptance.' },
@@ -282,16 +292,16 @@ export function verifyDeliverable(input = {}) {
   const skillDetails = REVIEW_SKILL_DETAILS[normalized.taskType] || REVIEW_SKILL_DETAILS.general;
   const explicitCriteria = extractExplicitRequirements(normalized.taskDescription).map((requirement, index) => buildExplicitCriterion(requirement, index));
   const promiseCriteria = normalized.aspPromise ? [buildExplicitCriterion(`Service promise: ${normalized.aspPromise}`, 'promise')] : [];
-  const criteria = [...explicitCriteria, ...promiseCriteria, ...skill.criteria];
+  const criteria = applyApplicability([...explicitCriteria, ...promiseCriteria, ...skill.criteria], normalized);
   const coverageMatrix = criteria.map((item) => evaluateCriterion(item, normalized.deliverableText));
   const counts = countStatuses(coverageMatrix);
   const scores = scoreByDimension(coverageMatrix);
   const totalScore = Object.values(scores).reduce((sum, value) => sum + value, 0);
   const action = ACTIONS.find((item) => totalScore >= item.min) || ACTIONS[ACTIONS.length - 1];
-  const missingItems = coverageMatrix.filter((row) => row.status !== 'pass').map((row) => row.requirement);
+  const missingItems = coverageMatrix.filter((row) => row.status !== 'pass' && row.status !== 'not_applicable').map((row) => row.requirement);
   const mainReasons = buildMainReasons(action, coverageMatrix, missingItems);
   const methodNote = 'This public MVP uses OKX.AI-style review dimensions, task-category review skills, and deterministic evidence checks. It is a review aid, not an official ruling.';
-  return { jobId: normalized.jobId, taskTitle: normalized.taskTitle, taskType: normalized.taskType, skillLabel: skill.label, skillFocus: skill.focus, skillScope: skillDetails.scope, skillNotApplicable: skillDetails.notApplicable, commonIssues: skillDetails.commonIssues, followUpQuestions: skillDetails.followUpQuestions, evidenceToCheck: skill.evidenceToCheck, reviewMode: 'deterministic_fallback', methodNote, verdict: action.verdict, verdictLabel: action.label, riskLevel: action.risk, summary: action.summary, totalScore, scores, scoreBasis: buildScoreBasis(coverageMatrix), statusCounts: counts, coverageMatrix, missingItems, mainReasons, suggestedReply: buildSuggestedReply(normalized, action, coverageMatrix), evidencePack: buildEvidencePack(normalized, action, scores, totalScore, coverageMatrix, missingItems, skill), roleUseCases: ROLE_USE_CASES, okxAlignment: OKX_ALIGNMENT, evidenceMap: buildEvidenceMap(coverageMatrix), scoreInterpretation: buildScoreInterpretation(scores, coverageMatrix), evaluatorNotes: buildEvaluatorNotes(normalized, action, scores, coverageMatrix), aspImprovementNotes: buildAspImprovementNotes(coverageMatrix), generatedAt: new Date().toISOString() };
+  return { jobId: normalized.jobId, taskTitle: normalized.taskTitle, taskType: normalized.taskType, skillLabel: skill.label, skillFocus: skill.focus, skillScope: skillDetails.scope, skillNotApplicable: skillDetails.notApplicable, commonIssues: skillDetails.commonIssues, followUpQuestions: skillDetails.followUpQuestions, evidenceToCheck: skill.evidenceToCheck, reviewMode: 'deterministic_fallback', methodNote, verdict: action.verdict, verdictLabel: action.label, riskLevel: action.risk, summary: action.summary, totalScore, scores, scoreBasis: buildScoreBasis(coverageMatrix), statusCounts: counts, coverageMatrix, missingItems, mainReasons, suggestedReply: buildSuggestedReply(normalized, action, coverageMatrix), evidencePack: buildEvidencePack(normalized, action, scores, totalScore, coverageMatrix, missingItems, skill), roleUseCases: ROLE_USE_CASES, okxAlignment: OKX_ALIGNMENT, evidenceMap: buildEvidenceMap(coverageMatrix), scoreInterpretation: buildScoreInterpretation(scores, coverageMatrix), evaluatorNotes: buildEvaluatorNotes(normalized, action, scores, coverageMatrix), aspImprovementNotes: buildAspImprovementNotes(coverageMatrix), scoredChecklist: coverageMatrix.filter((row) => row.scoreIncluded), advisoryChecks: coverageMatrix.filter((row) => row.requiredness === 'optional'), notApplicableChecks: coverageMatrix.filter((row) => row.status === 'not_applicable'), applicabilitySummary: buildApplicabilitySummary(coverageMatrix), generatedAt: new Date().toISOString() };
 }
 
 export function buildMarkdownReport(report) {
@@ -300,14 +310,43 @@ export function buildMarkdownReport(report) {
 }
 
 function normalizeInput(input) { return { jobId: String(input.jobId || '').trim(), taskTitle: String(input.taskTitle || '').trim(), taskType: String(input.taskType || 'world_cup_prediction').trim(), taskDescription: String(input.taskDescription || '').trim(), aspPromise: String(input.aspPromise || '').trim(), deliverableText: String(input.deliverableText || '').trim(), userConcern: String(input.userConcern || '').trim() }; }
-function buildExplicitCriterion(requirement, index) { return { id: `explicit_${index}`, label: requirement, dimension: 'specMatch', severity: 'high', keywords: tokenizeRequirement(requirement), pass: 'The deliverable clearly addresses this explicit task requirement.', partial: 'The deliverable mentions this requirement but does not provide enough detail.', fail: 'The deliverable does not provide verifiable evidence for this explicit requirement.', explicit: true }; }
+function buildExplicitCriterion(requirement, index) { return { id: `explicit_${index}`, label: requirement, dimension: 'specMatch', severity: 'high', keywords: tokenizeRequirement(requirement), pass: 'The deliverable clearly addresses this explicit task requirement.', partial: 'The deliverable mentions this requirement but does not provide enough detail.', fail: 'The deliverable does not provide verifiable evidence for this explicit requirement.', explicit: true, requiredness: 'core', scoreIncluded: row.scoreIncluded }; }
 function extractExplicitRequirements(taskDescription) { const text = String(taskDescription || '').replace(/\r/g, ''); const bulletLines = text.split(NL).map((line) => line.replace(/^[-*•\d.)\s]+/, '').trim()).filter(Boolean); const bulletRequirements = bulletLines.filter((item) => item.length >= 8 && item.length <= 260 && REQUIREMENT_PATTERN.test(item) && !isHeadingLine(item)); if (bulletRequirements.length >= 2) return uniqueRequirements(bulletRequirements).slice(0, 12); return uniqueRequirements(text.split(/[.;。！？!?\n]+/).map((item) => item.trim()).filter((item) => item.length >= 8 && item.length <= 260 && REQUIREMENT_PATTERN.test(item) && !isHeadingLine(item))).slice(0, 12); }
 function isHeadingLine(item) {
   return /^(acceptance criteria|验收标准|requirements|任务要求|criteria)[:：]?$/i.test(String(item).trim());
 }
 
-function evaluateCriterion(criterionItem, deliverableText) { const text = deliverableText.toLowerCase(); const keywords = criterionItem.keywords?.length ? criterionItem.keywords : tokenizeRequirement(criterionItem.label); const hits = keywords.filter((keyword) => text.includes(keyword.toLowerCase())); const requirementWords = tokenizeRequirement(criterionItem.label); const wordHits = requirementWords.filter((word) => text.includes(word.toLowerCase())); const hitScore = Math.max(keywords.length ? hits.length / keywords.length : 0, requirementWords.length ? Math.min(wordHits.length / Math.min(requirementWords.length, 5), 1) : 0); if (!deliverableText.trim()) return row(criterionItem, 'missing_evidence', 'No deliverable text was provided.', 'No evidence can be reviewed from empty delivery material.'); if (hitScore >= 0.45 || hits.length >= 2) return row(criterionItem, 'pass', hits.length ? `Found evidence keywords: ${hits.slice(0, 5).join(', ')}` : criterionItem.pass, null); if (hitScore >= 0.18 || hits.length === 1 || wordHits.length >= 1) return row(criterionItem, 'partial', `Partial signal detected: ${[...hits, ...wordHits].slice(0, 5).join(', ') || 'related wording'}`, criterionItem.partial); return row(criterionItem, 'missing_evidence', 'No clear supporting evidence found in the deliverable text.', criterionItem.fail); }
-function row(criterionItem, status, evidence, issue) { return { id: criterionItem.id, requirement: criterionItem.label, status, dimension: criterionItem.dimension, severity: criterionItem.severity, evidence, issue, passRule: criterionItem.pass, partialRule: criterionItem.partial, failRule: criterionItem.fail }; }
+function applyApplicability(criteria, input) {
+  const context = [input.taskTitle, input.taskDescription, input.aspPromise, input.deliverableText, input.userConcern].join(' ').toLowerCase();
+  return criteria.map((criterion) => {
+    if (criterion.explicit) return { ...criterion, requiredness: 'core', scoreIncluded: row.scoreIncluded, applicabilityReason: 'explicit_task_or_promise' };
+    const rule = APPLICABILITY_RULES[criterion.id] || {};
+    const requiredness = rule.requiredness || criterion.requiredness || 'core';
+    const triggerKeywords = rule.triggerKeywords || criterion.triggerKeywords || [];
+    if (requiredness === 'core') return { ...criterion, requiredness, triggerKeywords, scoreIncluded: row.scoreIncluded, applicabilityReason: 'core_category_criterion' };
+    const triggered = triggerKeywords.some((keyword) => context.includes(String(keyword).toLowerCase()));
+    if (requiredness === 'conditional') {
+      return { ...criterion, requiredness, triggerKeywords, scoreIncluded: triggered, notApplicable: !triggered, applicabilityReason: triggered ? 'triggered_by_task_materials' : 'not_triggered_by_task_materials' };
+    }
+    return { ...criterion, requiredness, triggerKeywords, scoreIncluded: false, advisory: true, applicabilityReason: triggered ? 'optional_triggered_advisory' : 'optional_advisory' };
+  });
+}
+
+function evaluateCriterion(criterionItem, deliverableText) {
+  if (criterionItem.notApplicable) return row(criterionItem, 'not_applicable', 'This criterion was not triggered by the provided task materials.', 'Not applicable to the current task scope.');
+  const text = deliverableText.toLowerCase();
+  const keywords = criterionItem.keywords?.length ? criterionItem.keywords : tokenizeRequirement(criterionItem.label);
+  const hits = keywords.filter((keyword) => text.includes(keyword.toLowerCase()));
+  const requirementWords = tokenizeRequirement(criterionItem.label);
+  const wordHits = requirementWords.filter((word) => text.includes(word.toLowerCase()));
+  const hitScore = Math.max(keywords.length ? hits.length / keywords.length : 0, requirementWords.length ? Math.min(wordHits.length / Math.min(requirementWords.length, 5), 1) : 0);
+  if (!deliverableText.trim()) return row(criterionItem, 'missing_evidence', 'No deliverable text was provided.', 'No evidence can be reviewed from empty delivery material.');
+  if (hitScore >= 0.45 || hits.length >= 2) return row(criterionItem, 'pass', hits.length ? `Found evidence keywords: ${hits.slice(0, 5).join(', ')}` : criterionItem.pass, null);
+  if (hitScore >= 0.18 || hits.length === 1 || wordHits.length >= 1) return row(criterionItem, 'partial', `Partial signal detected: ${[...hits, ...wordHits].slice(0, 5).join(', ') || 'related wording'}`, criterionItem.partial);
+  if (criterionItem.requiredness === 'optional') return row(criterionItem, 'not_applicable', 'Optional advisory criterion; no scoring evidence required.', 'Optional advisory item.');
+  return row(criterionItem, 'missing_evidence', 'No clear supporting evidence found in the deliverable text.', criterionItem.fail);
+}
+function row(criterionItem, status, evidence, issue) { return { id: criterionItem.id, requirement: criterionItem.label, status, dimension: criterionItem.dimension, severity: criterionItem.severity, evidence, issue, passRule: criterionItem.pass, partialRule: criterionItem.partial, failRule: criterionItem.fail, requiredness: criterionItem.requiredness || 'core', triggerKeywords: criterionItem.triggerKeywords || [], scoreIncluded: criterionItem.scoreIncluded !== false && status !== 'not_applicable', applicabilityReason: criterionItem.applicabilityReason || 'core_category_criterion' }; }
 function tokenizeRequirement(requirement) {
   const source = String(requirement || '');
   const lower = source.toLowerCase();
@@ -317,11 +356,11 @@ function tokenizeRequirement(requirement) {
   return [...new Set([...latin, ...zh])].slice(0, 12);
 }
 function uniqueRequirements(items) { const seen = new Set(); return items.filter((item) => { const key = item.toLowerCase().replace(/\s+/g, ' ').trim(); if (!key || seen.has(key)) return false; seen.add(key); return true; }); }
-function countStatuses(rows) { return rows.reduce((acc, row) => { acc[row.status] = (acc[row.status] || 0) + 1; return acc; }, { pass: 0, partial: 0, missing_evidence: 0, fail: 0 }); }
-function scoreByDimension(rows) { const scores = {}; for (const [dimension, config] of Object.entries(DIMENSIONS)) { const dimensionRows = rows.filter((row) => row.dimension === dimension); if (!dimensionRows.length) { scores[dimension] = 0; continue; } const earned = dimensionRows.reduce((sum, row) => sum + SCORE_VALUE[row.status], 0); scores[dimension] = Math.round(clamp(earned / dimensionRows.length, 0, 1) * config.max); } return scores; }
-function buildScoreBasis(rows) { return Object.fromEntries(Object.keys(DIMENSIONS).map((dimension) => { const dimensionRows = rows.filter((row) => row.dimension === dimension); return [dimension, { max: DIMENSIONS[dimension].max, total: dimensionRows.length, pass: dimensionRows.filter((row) => row.status === 'pass').length, partial: dimensionRows.filter((row) => row.status === 'partial').length, missingEvidence: dimensionRows.filter((row) => row.status === 'missing_evidence').length, fail: dimensionRows.filter((row) => row.status === 'fail').length }]; })); }
-function buildMainReasons(action, matrix, missingItems) { if (action.verdict === 'accept') return ['Most core requirements have supporting evidence in the provided deliverable.']; const priority = { high: 0, medium: 1, low: 2 }; const rows = matrix.filter((row) => row.status !== 'pass').sort((a, b) => priority[a.severity] - priority[b.severity]).slice(0, 4); const reasons = rows.map((row) => { if (row.status === 'partial') return `${row.requirement}: partially addressed, but the evidence is not detailed enough for confident acceptance.`; if (row.status === 'fail') return `${row.requirement}: does not match the requirement.`; return `${row.requirement}: no clear supporting evidence was found in the provided deliverable.`; }); if (!reasons.length && missingItems.length) reasons.push(`The review found unresolved items: ${missingItems.slice(0, 3).join(', ')}.`); return reasons.length ? reasons : ['The deliverable should be reviewed manually before final acceptance.']; }
-function buildSuggestedReply(input, action, matrix) { const jobPart = input.jobId ? ` for Job ID ${input.jobId}` : ''; const unresolved = matrix.filter((row) => row.status !== 'pass').sort((a, b) => (a.severity === 'high' ? -1 : 1)).slice(0, 7); if (action.verdict === 'accept') return `I reviewed the deliverable${jobPart} and it appears to satisfy the main task requirements. I am ready to accept the delivery.`; const itemList = unresolved.length ? unresolved.map((row, index) => `${index + 1}. ${row.requirement} — ${row.status === 'missing_evidence' ? 'missing evidence' : row.status}`).join(NL) : '1. Please provide additional evidence for the requested acceptance criteria.'; if (action.verdict === 'minor_revision') return ['I can accept the delivery after minor supplements' + jobPart + '. Please add or clarify:', itemList, 'Once these points are addressed, the deliverable should be ready for acceptance.'].join(NL + NL); if (action.verdict === 'request_revision') return ['I am not ready to accept the delivery yet' + jobPart + '. Please revise and supplement the following missing or partial items:', itemList, 'These items are part of the original task requirements or review checklist and are needed before final acceptance.'].join(NL + NL); return ['I cannot accept the current delivery' + jobPart + ' because major required items are missing or not verifiable:', itemList, 'Please provide a substantially revised deliverable or the task may need to proceed with a structured rejection / dispute evidence pack.'].join(NL + NL); }
+function countStatuses(rows) { return rows.reduce((acc, row) => { acc[row.status] = (acc[row.status] || 0) + 1; return acc; }, { pass: 0, partial: 0, missing_evidence: 0, fail: 0, not_applicable: 0 }); }
+function scoreByDimension(rows) { const scores = {}; for (const [dimension, config] of Object.entries(DIMENSIONS)) { const dimensionRows = rows.filter((row) => row.dimension === dimension && row.scoreIncluded); if (!dimensionRows.length) { scores[dimension] = 0; continue; } const earned = dimensionRows.reduce((sum, row) => sum + SCORE_VALUE[row.status], 0); scores[dimension] = Math.round(clamp(earned / dimensionRows.length, 0, 1) * config.max); } return scores; }
+function buildScoreBasis(rows) { return Object.fromEntries(Object.keys(DIMENSIONS).map((dimension) => { const dimensionRows = rows.filter((row) => row.dimension === dimension && row.scoreIncluded); return [dimension, { max: DIMENSIONS[dimension].max, total: dimensionRows.length, pass: dimensionRows.filter((row) => row.status === 'pass').length, partial: dimensionRows.filter((row) => row.status === 'partial').length, missingEvidence: dimensionRows.filter((row) => row.status === 'missing_evidence').length, fail: dimensionRows.filter((row) => row.status === 'fail').length }]; })); }
+function buildMainReasons(action, matrix, missingItems) { if (action.verdict === 'accept') return ['Most core requirements have supporting evidence in the provided deliverable.']; const priority = { high: 0, medium: 1, low: 2 }; const rows = matrix.filter((row) => row.status !== 'pass' && row.status !== 'not_applicable').sort((a, b) => priority[a.severity] - priority[b.severity]).slice(0, 4); const reasons = rows.map((row) => { if (row.status === 'partial') return `${row.requirement}: partially addressed, but the evidence is not detailed enough for confident acceptance.`; if (row.status === 'fail') return `${row.requirement}: does not match the requirement.`; return `${row.requirement}: no clear supporting evidence was found in the provided deliverable.`; }); if (!reasons.length && missingItems.length) reasons.push(`The review found unresolved items: ${missingItems.slice(0, 3).join(', ')}.`); return reasons.length ? reasons : ['The deliverable should be reviewed manually before final acceptance.']; }
+function buildSuggestedReply(input, action, matrix) { const jobPart = input.jobId ? ` for Job ID ${input.jobId}` : ''; const unresolved = matrix.filter((row) => row.status !== 'pass' && row.status !== 'not_applicable').sort((a, b) => (a.severity === 'high' ? -1 : 1)).slice(0, 7); if (action.verdict === 'accept') return `I reviewed the deliverable${jobPart} and it appears to satisfy the main task requirements. I am ready to accept the delivery.`; const itemList = unresolved.length ? unresolved.map((row, index) => `${index + 1}. ${row.requirement} — ${row.status === 'missing_evidence' ? 'missing evidence' : row.status}`).join(NL) : '1. Please provide additional evidence for the requested acceptance criteria.'; if (action.verdict === 'minor_revision') return ['I can accept the delivery after minor supplements' + jobPart + '. Please add or clarify:', itemList, 'Once these points are addressed, the deliverable should be ready for acceptance.'].join(NL + NL); if (action.verdict === 'request_revision') return ['I am not ready to accept the delivery yet' + jobPart + '. Please revise and supplement the following missing or partial items:', itemList, 'These items are part of the original task requirements or review checklist and are needed before final acceptance.'].join(NL + NL); return ['I cannot accept the current delivery' + jobPart + ' because major required items are missing or not verifiable:', itemList, 'Please provide a substantially revised deliverable or the task may need to proceed with a structured rejection / dispute evidence pack.'].join(NL + NL); }
 function buildEvidenceMap(matrix) {
   return matrix.map((row) => {
     const evidenceFound = row.status === 'pass' || row.status === 'partial' ? [row.evidence] : [];
@@ -337,7 +376,7 @@ function buildEvidenceMap(matrix) {
       impact: impactFor(row),
       recommendedFollowUp: followUpFor(row),
       evaluatorNote: evaluatorNoteFor(row),
-      scoreIncluded: true
+      scoreIncluded: row.scoreIncluded
     };
   });
 }
@@ -366,7 +405,7 @@ function evaluatorNoteFor(row) {
 function buildScoreInterpretation(scores, matrix) {
   const notes = {};
   for (const dimension of Object.keys(DIMENSIONS)) {
-    const rows = matrix.filter((row) => row.dimension === dimension);
+    const rows = matrix.filter((row) => row.dimension === dimension && row.scoreIncluded);
     const missing = rows.filter((row) => row.status === 'missing_evidence' || row.status === 'fail').length;
     const partial = rows.filter((row) => row.status === 'partial').length;
     const pass = rows.filter((row) => row.status === 'pass').length;
@@ -380,7 +419,7 @@ function buildScoreInterpretation(scores, matrix) {
 }
 
 function buildEvaluatorNotes(input, action, scores, matrix) {
-  const unresolved = matrix.filter((row) => row.status !== 'pass');
+  const unresolved = matrix.filter((row) => row.status !== 'pass' && row.status !== 'not_applicable');
   const high = unresolved.filter((row) => row.severity === 'high').slice(0, 4);
   const dimensionImpact = Object.entries(scores).sort((a, b) => (a[1] / DIMENSIONS[a[0]].max) - (b[1] / DIMENSIONS[b[0]].max))[0];
   const notes = [];
@@ -395,7 +434,7 @@ function buildEvaluatorNotes(input, action, scores, matrix) {
 
 function buildAspImprovementNotes(matrix) {
   return matrix
-    .filter((row) => row.status !== 'pass')
+    .filter((row) => row.status !== 'pass' && row.status !== 'not_applicable')
     .sort((a, b) => (a.severity === 'high' ? -1 : 1))
     .slice(0, 6)
     .map((row) => {
@@ -405,6 +444,14 @@ function buildAspImprovementNotes(matrix) {
     });
 }
 
-function buildEvidencePack(input, action, scores, totalScore, matrix, missingItems, skill) { const facts = matrix.filter((row) => row.status !== 'pass').slice(0, 10).map((row, index) => `${index + 1}. ${row.requirement} — ${row.status.toUpperCase()} (${row.dimension}, ${row.severity}). ${row.issue || row.evidence}`).join(NL); return ['Review summary', '', `Job ID: ${input.jobId || 'not provided'}`, `Task: ${input.taskTitle || 'Untitled task'}`, `Review skill: ${skill.label}`, `Suggested action: ${action.label}`, `Reference scoring: Spec ${scores.specMatch}/40 + Acceptance ${scores.acceptanceMet}/30 + Functional ${scores.functionalCorrectness}/20 + Professional ${scores.professionalStandard}/10 = Total ${totalScore}/100`, '', 'Evidence to check:', skill.evidenceToCheck.map((item) => `- ${item}`).join(NL), '', 'Findings:', facts || '1. No major missing item detected by the current verifier.', '', 'Missing / partial / evidence-insufficient items:', missingItems.length ? missingItems.map((item) => `- ${item}`).join(NL) : '- None detected', '', 'Boundary:', 'AgentProof reviews only the materials provided by the user. Missing evidence means not verifiable from the provided deliverable; it does not automatically prove provider failure.'].join(NL); }
+function buildApplicabilitySummary(matrix) {
+  return {
+    scored: matrix.filter((row) => row.scoreIncluded).length,
+    advisory: matrix.filter((row) => row.requiredness === 'optional').length,
+    notApplicable: matrix.filter((row) => row.status === 'not_applicable').length
+  };
+}
+
+function buildEvidencePack(input, action, scores, totalScore, matrix, missingItems, skill) { const facts = matrix.filter((row) => row.status !== 'pass' && row.status !== 'not_applicable').slice(0, 10).map((row, index) => `${index + 1}. ${row.requirement} — ${row.status.toUpperCase()} (${row.dimension}, ${row.severity}). ${row.issue || row.evidence}`).join(NL); return ['Review summary', '', `Job ID: ${input.jobId || 'not provided'}`, `Task: ${input.taskTitle || 'Untitled task'}`, `Review skill: ${skill.label}`, `Suggested action: ${action.label}`, `Reference scoring: Spec ${scores.specMatch}/40 + Acceptance ${scores.acceptanceMet}/30 + Functional ${scores.functionalCorrectness}/20 + Professional ${scores.professionalStandard}/10 = Total ${totalScore}/100`, '', 'Evidence to check:', skill.evidenceToCheck.map((item) => `- ${item}`).join(NL), '', 'Findings:', facts || '1. No major missing item detected by the current verifier.', '', 'Missing / partial / evidence-insufficient items:', missingItems.length ? missingItems.map((item) => `- ${item}`).join(NL) : '- None detected', '', 'Boundary:', 'AgentProof reviews only the materials provided by the user. Missing evidence means not verifiable from the provided deliverable; it does not automatically prove provider failure.'].join(NL); }
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 function escapePipe(value) { return String(value).replace(/\|/g, '\\|').split(NL).join('<br>'); }

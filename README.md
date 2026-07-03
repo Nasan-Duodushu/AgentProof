@@ -43,7 +43,7 @@ The public MVP uses a deterministic fallback mechanism aligned with OKX.AI-style
 5. Score each dimension using the formula `(passes + 0.5 × partials) / total × dimension weight`.
 6. Produce a review checklist, reference score, main reasons, and response draft.
 
-This mechanism is intentionally transparent and stable for a public demo. A production version can add AI-assisted semantic review and evidence mapping, while keeping deterministic checks as a fallback. Missing evidence means the item is not verifiable from the provided deliverable; it does not automatically prove provider failure.
+This mechanism is intentionally transparent and stable for a public demo. A production version can add AI-assisted semantic review and evidence mapping, while keeping deterministic checks as a fallback. Missing evidence means the item is not verifiable from the provided deliverable; it does not automatically prove provider failure. Only applicable criteria are scored; optional or non-applicable checks are retained as advisory context and do not reduce the reference score.
 
 ---
 
@@ -183,7 +183,7 @@ AgentProof 围绕三类 OKX.AI 角色设计：用户可在验收前复核，ASP 
 5. 使用 `(通过项 + 0.5 × 部分满足项) / 总项 × 维度权重` 计算每个维度参考分。
 6. 生成复核清单、参考分、主要原因和回复草稿。
 
-这个机制适合公开演示，稳定且可解释。正式版本可以加入 AI 语义复核和证据映射，同时保留规则检查作为兜底。证据不足表示当前交付物无法验证该项，不等于断言服务方失败。
+这个机制适合公开演示，稳定且可解释。正式版本可以加入 AI 语义复核和证据映射，同时保留规则检查作为兜底。证据不足表示当前交付物无法验证该项，不等于断言服务方失败。 AgentProof 只对适用标准计分；可选或不适用项保留为专业建议，不降低参考分。
 
 ---
 
