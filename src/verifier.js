@@ -245,6 +245,30 @@ const REVIEW_SKILL_DETAILS = {
   }
 };
 
+const ROLE_USE_CASES = {
+  user: {
+    purpose: 'Review an Agent delivery before acceptance, revision request, rejection, or dispute preparation.',
+    outputs: ['suggestedAction', 'mainReasons', 'responseDraft', 'missingEvidence', 'reviewChecklist']
+  },
+  asp: {
+    purpose: 'Self-check whether a delivery has enough evidence before submission.',
+    outputs: ['aspImprovementNotes', 'evidenceToAdd', 'riskyMissingItems']
+  },
+  evaluator: {
+    purpose: 'Organize dispute evidence using OKX.AI-style review dimensions without replacing arbitration.',
+    outputs: ['evidenceMap', 'evaluatorNotes', 'scoreInterpretation']
+  }
+};
+
+const OKX_ALIGNMENT = {
+  basis: 'OKX.AI-style review dimensions and user-provided evidence',
+  dimensions: ['Spec match', 'Acceptance met', 'Functional correctness', 'Professional standard'],
+  weights: { specMatch: 40, acceptanceMet: 30, functionalCorrectness: 20, professionalStandard: 10 },
+  formula: '(passes + 0.5 * partials) / total * dimension weight',
+  nonOfficialRuling: true,
+  doesNotReplaceArbitration: true
+};
+
 const ACTIONS = [
   { min: 80, verdict: 'accept', label: 'Accept', risk: 'Low risk', summary: 'The deliverable appears ready for acceptance.' },
   { min: 75, verdict: 'minor_revision', label: 'Minor Revision', risk: 'Medium risk', summary: 'The deliverable is mostly complete but should be supplemented before final acceptance.' },
@@ -267,7 +291,7 @@ export function verifyDeliverable(input = {}) {
   const missingItems = coverageMatrix.filter((row) => row.status !== 'pass').map((row) => row.requirement);
   const mainReasons = buildMainReasons(action, coverageMatrix, missingItems);
   const methodNote = 'This public MVP uses OKX.AI-style review dimensions, task-category review skills, and deterministic evidence checks. It is a review aid, not an official ruling.';
-  return { jobId: normalized.jobId, taskTitle: normalized.taskTitle, taskType: normalized.taskType, skillLabel: skill.label, skillFocus: skill.focus, skillScope: skillDetails.scope, skillNotApplicable: skillDetails.notApplicable, commonIssues: skillDetails.commonIssues, followUpQuestions: skillDetails.followUpQuestions, evidenceToCheck: skill.evidenceToCheck, reviewMode: 'deterministic_fallback', methodNote, verdict: action.verdict, verdictLabel: action.label, riskLevel: action.risk, summary: action.summary, totalScore, scores, scoreBasis: buildScoreBasis(coverageMatrix), statusCounts: counts, coverageMatrix, missingItems, mainReasons, suggestedReply: buildSuggestedReply(normalized, action, coverageMatrix), evidencePack: buildEvidencePack(normalized, action, scores, totalScore, coverageMatrix, missingItems, skill), generatedAt: new Date().toISOString() };
+  return { jobId: normalized.jobId, taskTitle: normalized.taskTitle, taskType: normalized.taskType, skillLabel: skill.label, skillFocus: skill.focus, skillScope: skillDetails.scope, skillNotApplicable: skillDetails.notApplicable, commonIssues: skillDetails.commonIssues, followUpQuestions: skillDetails.followUpQuestions, evidenceToCheck: skill.evidenceToCheck, reviewMode: 'deterministic_fallback', methodNote, verdict: action.verdict, verdictLabel: action.label, riskLevel: action.risk, summary: action.summary, totalScore, scores, scoreBasis: buildScoreBasis(coverageMatrix), statusCounts: counts, coverageMatrix, missingItems, mainReasons, suggestedReply: buildSuggestedReply(normalized, action, coverageMatrix), evidencePack: buildEvidencePack(normalized, action, scores, totalScore, coverageMatrix, missingItems, skill), roleUseCases: ROLE_USE_CASES, okxAlignment: OKX_ALIGNMENT, evidenceMap: buildEvidenceMap(coverageMatrix), scoreInterpretation: buildScoreInterpretation(scores, coverageMatrix), evaluatorNotes: buildEvaluatorNotes(normalized, action, scores, coverageMatrix), aspImprovementNotes: buildAspImprovementNotes(coverageMatrix), generatedAt: new Date().toISOString() };
 }
 
 export function buildMarkdownReport(report) {
@@ -298,6 +322,89 @@ function scoreByDimension(rows) { const scores = {}; for (const [dimension, conf
 function buildScoreBasis(rows) { return Object.fromEntries(Object.keys(DIMENSIONS).map((dimension) => { const dimensionRows = rows.filter((row) => row.dimension === dimension); return [dimension, { max: DIMENSIONS[dimension].max, total: dimensionRows.length, pass: dimensionRows.filter((row) => row.status === 'pass').length, partial: dimensionRows.filter((row) => row.status === 'partial').length, missingEvidence: dimensionRows.filter((row) => row.status === 'missing_evidence').length, fail: dimensionRows.filter((row) => row.status === 'fail').length }]; })); }
 function buildMainReasons(action, matrix, missingItems) { if (action.verdict === 'accept') return ['Most core requirements have supporting evidence in the provided deliverable.']; const priority = { high: 0, medium: 1, low: 2 }; const rows = matrix.filter((row) => row.status !== 'pass').sort((a, b) => priority[a.severity] - priority[b.severity]).slice(0, 4); const reasons = rows.map((row) => { if (row.status === 'partial') return `${row.requirement}: partially addressed, but the evidence is not detailed enough for confident acceptance.`; if (row.status === 'fail') return `${row.requirement}: does not match the requirement.`; return `${row.requirement}: no clear supporting evidence was found in the provided deliverable.`; }); if (!reasons.length && missingItems.length) reasons.push(`The review found unresolved items: ${missingItems.slice(0, 3).join(', ')}.`); return reasons.length ? reasons : ['The deliverable should be reviewed manually before final acceptance.']; }
 function buildSuggestedReply(input, action, matrix) { const jobPart = input.jobId ? ` for Job ID ${input.jobId}` : ''; const unresolved = matrix.filter((row) => row.status !== 'pass').sort((a, b) => (a.severity === 'high' ? -1 : 1)).slice(0, 7); if (action.verdict === 'accept') return `I reviewed the deliverable${jobPart} and it appears to satisfy the main task requirements. I am ready to accept the delivery.`; const itemList = unresolved.length ? unresolved.map((row, index) => `${index + 1}. ${row.requirement} — ${row.status === 'missing_evidence' ? 'missing evidence' : row.status}`).join(NL) : '1. Please provide additional evidence for the requested acceptance criteria.'; if (action.verdict === 'minor_revision') return ['I can accept the delivery after minor supplements' + jobPart + '. Please add or clarify:', itemList, 'Once these points are addressed, the deliverable should be ready for acceptance.'].join(NL + NL); if (action.verdict === 'request_revision') return ['I am not ready to accept the delivery yet' + jobPart + '. Please revise and supplement the following missing or partial items:', itemList, 'These items are part of the original task requirements or review checklist and are needed before final acceptance.'].join(NL + NL); return ['I cannot accept the current delivery' + jobPart + ' because major required items are missing or not verifiable:', itemList, 'Please provide a substantially revised deliverable or the task may need to proceed with a structured rejection / dispute evidence pack.'].join(NL + NL); }
+function buildEvidenceMap(matrix) {
+  return matrix.map((row) => {
+    const evidenceFound = row.status === 'pass' || row.status === 'partial' ? [row.evidence] : [];
+    const missingEvidence = row.status === 'missing_evidence' || row.status === 'fail' ? [row.issue || row.failRule || 'Supporting evidence is missing.'] : [];
+    return {
+      requirement: row.requirement,
+      source: row.id?.startsWith('explicit_') ? 'explicit_task' : row.id === 'explicit_promise' ? 'asp_promise' : 'category_skill',
+      dimension: row.dimension,
+      severity: row.severity,
+      status: row.status,
+      evidenceFound,
+      missingEvidence,
+      impact: impactFor(row),
+      recommendedFollowUp: followUpFor(row),
+      evaluatorNote: evaluatorNoteFor(row),
+      scoreIncluded: true
+    };
+  });
+}
+
+function impactFor(row) {
+  if (row.status === 'pass') return 'Supports acceptance for this item.';
+  if (row.status === 'partial') return row.severity === 'high' ? 'May block confident acceptance until clarified.' : 'Should be clarified before final acceptance.';
+  if (row.status === 'missing_evidence') return row.severity === 'high' ? 'High-priority evidence gap affecting the reference score.' : 'Evidence gap that should be supplemented.';
+  return 'Potential mismatch with the stated requirement.';
+}
+
+function followUpFor(row) {
+  if (row.status === 'pass') return 'No follow-up required for this item.';
+  if (row.status === 'partial') return `Please add concrete evidence for: ${row.requirement}`;
+  if (row.status === 'missing_evidence') return `Please provide verifiable evidence for: ${row.requirement}`;
+  return `Please revise the delivery to satisfy: ${row.requirement}`;
+}
+
+function evaluatorNoteFor(row) {
+  if (row.status === 'pass') return 'Clear supporting evidence is present in the provided deliverable.';
+  if (row.status === 'partial') return 'Treat as partially supported; check whether supplemental evidence resolves the gap.';
+  if (row.status === 'missing_evidence') return 'Treat as evidence insufficiency, not automatic proof of provider failure.';
+  return 'Potential requirement mismatch; compare against task text and submitted materials.';
+}
+
+function buildScoreInterpretation(scores, matrix) {
+  const notes = {};
+  for (const dimension of Object.keys(DIMENSIONS)) {
+    const rows = matrix.filter((row) => row.dimension === dimension);
+    const missing = rows.filter((row) => row.status === 'missing_evidence' || row.status === 'fail').length;
+    const partial = rows.filter((row) => row.status === 'partial').length;
+    const pass = rows.filter((row) => row.status === 'pass').length;
+    notes[dimension] = `${DIMENSIONS[dimension].label}: ${scores[dimension]}/${DIMENSIONS[dimension].max}. ${pass} pass, ${partial} partial, ${missing} unresolved or missing-evidence item(s).`;
+  }
+  const weakest = Object.entries(scores).sort((a, b) => (a[1] / DIMENSIONS[a[0]].max) - (b[1] / DIMENSIONS[b[0]].max))[0]?.[0];
+  return {
+    overall: weakest ? `The weakest dimension is ${DIMENSIONS[weakest].label}; review unresolved items in that dimension first.` : 'Review score generated from OKX.AI-style dimensions.',
+    dimensionNotes: notes
+  };
+}
+
+function buildEvaluatorNotes(input, action, scores, matrix) {
+  const unresolved = matrix.filter((row) => row.status !== 'pass');
+  const high = unresolved.filter((row) => row.severity === 'high').slice(0, 4);
+  const dimensionImpact = Object.entries(scores).sort((a, b) => (a[1] / DIMENSIONS[a[0]].max) - (b[1] / DIMENSIONS[b[0]].max))[0];
+  const notes = [];
+  notes.push('AgentProof is not an official ruling; use it as structured evidence support only.');
+  if (input.taskTitle) notes.push(`Task reviewed: ${input.taskTitle}.`);
+  if (dimensionImpact) notes.push(`Primary dimension to inspect: ${DIMENSIONS[dimensionImpact[0]].label} (${dimensionImpact[1]}/${DIMENSIONS[dimensionImpact[0]].max}).`);
+  if (high.length) notes.push(`High-priority unresolved items: ${high.map((row) => row.requirement).join('; ')}.`);
+  if (unresolved.some((row) => row.status === 'missing_evidence')) notes.push('Missing evidence should be treated as not verifiable from current materials, not automatic provider bad faith.');
+  notes.push(`Suggested action for user-side review: ${action.label}.`);
+  return notes;
+}
+
+function buildAspImprovementNotes(matrix) {
+  return matrix
+    .filter((row) => row.status !== 'pass')
+    .sort((a, b) => (a.severity === 'high' ? -1 : 1))
+    .slice(0, 6)
+    .map((row) => {
+      if (row.status === 'partial') return `Clarify and add concrete evidence for: ${row.requirement}`;
+      if (row.status === 'missing_evidence') return `Add verifiable evidence for: ${row.requirement}`;
+      return `Revise the deliverable to satisfy: ${row.requirement}`;
+    });
+}
+
 function buildEvidencePack(input, action, scores, totalScore, matrix, missingItems, skill) { const facts = matrix.filter((row) => row.status !== 'pass').slice(0, 10).map((row, index) => `${index + 1}. ${row.requirement} — ${row.status.toUpperCase()} (${row.dimension}, ${row.severity}). ${row.issue || row.evidence}`).join(NL); return ['Review summary', '', `Job ID: ${input.jobId || 'not provided'}`, `Task: ${input.taskTitle || 'Untitled task'}`, `Review skill: ${skill.label}`, `Suggested action: ${action.label}`, `Reference scoring: Spec ${scores.specMatch}/40 + Acceptance ${scores.acceptanceMet}/30 + Functional ${scores.functionalCorrectness}/20 + Professional ${scores.professionalStandard}/10 = Total ${totalScore}/100`, '', 'Evidence to check:', skill.evidenceToCheck.map((item) => `- ${item}`).join(NL), '', 'Findings:', facts || '1. No major missing item detected by the current verifier.', '', 'Missing / partial / evidence-insufficient items:', missingItems.length ? missingItems.map((item) => `- ${item}`).join(NL) : '- None detected', '', 'Boundary:', 'AgentProof reviews only the materials provided by the user. Missing evidence means not verifiable from the provided deliverable; it does not automatically prove provider failure.'].join(NL); }
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 function escapePipe(value) { return String(value).replace(/\|/g, '\\|').split(NL).join('<br>'); }

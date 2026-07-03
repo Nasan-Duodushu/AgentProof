@@ -95,6 +95,19 @@
         </div>
       </section>
 
+      <section class="role-section">
+        <div class="section-heading compact">
+          <span data-i18n="rolesKicker">Who can use this?</span>
+          <h2 data-i18n="rolesTitle">Built around OKX.AI task flow</h2>
+          <p data-i18n="rolesDesc">AgentProof structures the same review for users, ASPs, and evaluators.</p>
+        </div>
+        <div class="role-grid">
+          <article class="role-card"><strong data-i18n="roleUserTitle">Users</strong><p data-i18n="roleUserDesc">Review before accepting, requesting revision, or preparing a rejection reason.</p></article>
+          <article class="role-card"><strong data-i18n="roleAspTitle">ASPs</strong><p data-i18n="roleAspDesc">Check whether a delivery has enough evidence before submission.</p></article>
+          <article class="role-card"><strong data-i18n="roleEvaluatorTitle">Evaluators</strong><p data-i18n="roleEvaluatorDesc">Organize dispute evidence using OKX.AI-style review dimensions.</p></article>
+        </div>
+      </section>
+
       <main id="workspace" class="workspace">
         <section class="panel input-panel">
           <div class="section-head">
@@ -184,6 +197,7 @@
           <div class="tabs">
             <button class="tab active" data-tab="matrix" data-i18n="tabChecklist">Review Checklist</button>
             <button class="tab" data-tab="reply" data-i18n="tabReply">Response Draft</button>
+            <button class="tab" data-tab="evaluator" data-i18n="tabEvaluator">Evaluator Notes</button>
             <button class="tab" data-tab="evidence" data-i18n="tabEvidence">Evidence Notes</button>
             <button class="tab" data-tab="json">JSON</button>
           </div>
@@ -200,6 +214,13 @@
 
           <div class="tab-body" id="replyTab">
             <div class="copy-card"><div class="terminal-header"><div class="terminal-dots"><div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div></div><div class="terminal-title" data-i18n="replyFile">response-draft.md</div><button class="terminal-action-btn" data-copy="suggestedReply" data-i18n="copyReply">Copy Reply</button></div><pre id="suggestedReply"></pre></div>
+          </div>
+
+          <div class="tab-body" id="evaluatorTab">
+            <div class="terminal-card">
+              <div class="terminal-head"><span>evaluator-notes.md</span><button class="link-btn" data-copy="evaluatorNotes" data-i18n="copyEvaluator">Copy evaluator notes</button></div>
+              <pre id="evaluatorNotes"></pre>
+            </div>
           </div>
 
           <div class="tab-body" id="evidenceTab">

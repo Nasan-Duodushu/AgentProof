@@ -57,6 +57,7 @@ const I18N = {
     tabChecklist: 'Review Checklist',
     tabReply: 'Response Draft',
     tabEvidence: 'Evidence Notes',
+    tabEvaluator: 'Evaluator Notes',
     checklistNote: 'The checklist maps each task requirement to evidence found in the deliverable. It is a review aid, not an official ruling.',
     thRequirement: 'Requirement',
     thStatus: 'Status',
@@ -66,11 +67,21 @@ const I18N = {
     evidenceFile: 'evidence-notes.md',
     copyReply: 'Copy Reply',
     copyEvidence: 'Copy Evidence',
+    copyEvaluator: 'Copy evaluator notes',
     downloadMarkdown: 'Download Markdown',
     copyJson: 'Copy JSON',
     evidenceCardTitle: 'Evidence to check',
     issuesCardTitle: 'Common issues',
     scoreBasisTitle: 'Score basis',
+    rolesKicker: 'Who can use this?',
+    rolesTitle: 'Built around OKX.AI task flow',
+    rolesDesc: 'AgentProof structures the same review for users, ASPs, and evaluators.',
+    roleUserTitle: 'Users',
+    roleUserDesc: 'Review before accepting, requesting revision, or preparing a rejection reason.',
+    roleAspTitle: 'ASPs',
+    roleAspDesc: 'Check whether a delivery has enough evidence before submission.',
+    roleEvaluatorTitle: 'Evaluators',
+    roleEvaluatorDesc: 'Organize dispute evidence using OKX.AI-style review dimensions.',
     methodKicker: 'Review method',
     methodTitle: 'Transparent review logic',
     methodDesc: 'The public demo uses requirement extraction, task templates, and deterministic coverage checks. Production review can add AI-assisted semantic analysis and evidence mapping.',
@@ -159,6 +170,7 @@ const I18N = {
     tabChecklist: '复核清单',
     tabReply: '回复草稿',
     tabEvidence: '证据说明',
+    tabEvaluator: '仲裁参考',
     checklistNote: '复核清单会把任务要求逐条映射到交付物中的证据。它是验收辅助，不是官方裁决。',
     thRequirement: '要求',
     thStatus: '状态',
@@ -168,11 +180,21 @@ const I18N = {
     evidenceFile: '证据说明.md',
     copyReply: '复制回复',
     copyEvidence: '复制证据',
+    copyEvaluator: '复制仲裁参考',
     downloadMarkdown: '下载 Markdown',
     copyJson: '复制 JSON',
     evidenceCardTitle: '必查证据',
     issuesCardTitle: '常见问题',
     scoreBasisTitle: '评分依据',
+    rolesKicker: '谁可以使用？',
+    rolesTitle: '围绕 OKX.AI 任务流程设计',
+    rolesDesc: 'AgentProof 用同一套复核结构服务用户、ASP 和仲裁者。',
+    roleUserTitle: '用户',
+    roleUserDesc: '验收、要求修改或准备拒绝前进行复核。',
+    roleAspTitle: '服务方',
+    roleAspDesc: '交付前检查是否有足够证据支撑验收。',
+    roleEvaluatorTitle: '仲裁者',
+    roleEvaluatorDesc: '按照 OKX.AI 风格复核维度整理争议证据。',
     methodKicker: '复核机制',
     methodTitle: '透明的复核逻辑',
     methodDesc: '公开 Demo 使用任务要求提取、任务类型模板和确定性覆盖检查。正式复核可以加入 AI 语义分析和证据映射。',
@@ -289,6 +311,7 @@ function renderReport(report) {
   renderCoverage(report.coverageMatrix);
   $('#suggestedReply').textContent = displayReply(report);
   $('#evidencePack').textContent = displayEvidence(report);
+  $('#evaluatorNotes').textContent = displayEvaluatorNotes(report);
   $('#jsonReport').textContent = JSON.stringify(report, null, 2);
 }
 
@@ -324,6 +347,59 @@ function displayReply(report) {
   if (report.verdict === 'minor_revision') return `我可以在补充少量内容后验收该交付物${job}。请补充或澄清以下事项：${newline}${newline}${items}${newline}${newline}这些内容补齐后，交付物应可以进入最终验收。`;
   if (report.verdict === 'request_revision') return `我暂时不建议直接验收该交付物${job}。请先补充或修改以下缺失 / 证据不足的内容：${newline}${newline}${items}${newline}${newline}这些事项属于原始任务要求或验收标准的一部分，补充后我再继续验收。`;
   return `我目前无法验收该交付物${job}，因为存在较多必要内容缺失或无法验证：${newline}${newline}${items}${newline}${newline}请提供实质性修订版本，否则该任务可能需要保留结构化拒绝理由和证据材料。`;
+}
+
+function displayEvaluatorNotes(report) {
+  const newline = String.fromCharCode(10);
+  if (currentLang === 'en') {
+    const notes = report.evaluatorNotes?.length ? report.evaluatorNotes : ['AgentProof is not an official ruling; use it as structured evidence support only.'];
+    const score = report.scoreInterpretation?.overall ? [report.scoreInterpretation.overall] : [];
+    const asp = report.aspImprovementNotes?.length ? ['ASP improvement notes:', ...report.aspImprovementNotes.map((item) => `- ${item}`)] : [];
+    return ['Evaluator reference', '', ...notes.map((item) => `- ${item}`), '', 'Score interpretation:', ...score.map((item) => `- ${item}`), '', ...asp].join(newline);
+  }
+  const notes = report.evaluatorNotes?.length ? report.evaluatorNotes : [];
+  const translated = notes.map((item) => localizeEvaluatorNote(item));
+  const improvements = report.aspImprovementNotes?.length ? ['服务方可补充：', ...report.aspImprovementNotes.map((item) => `- ${localizeAspImprovement(item)}`)] : [];
+  return ['仲裁参考', '', ...translated.map((item) => `- ${item}`), '', '评分解释：', `- ${localizeScoreInterpretation(report.scoreInterpretation?.overall)}`, '', ...improvements].join(newline);
+}
+
+
+function localizeEvaluatorNote(item) {
+  return String(item)
+    .replace('AgentProof is not an official ruling; use it as structured evidence support only.', 'AgentProof 不是官方裁决，只能作为结构化证据参考。')
+    .replace('Missing evidence should be treated as not verifiable from current materials, not automatic provider bad faith.', '证据不足应视为当前材料无法验证，不等同于服务方恶意或失败。')
+    .replace('Suggested action for user-side review:', '用户侧复核建议：')
+    .replace('Primary dimension to inspect:', '优先检查维度：')
+    .replace('Task reviewed:', '复核任务：')
+    .replace('High-priority unresolved items:', '高优先级未解决项：')
+    .replace('Acceptance met', '验收满足')
+    .replace('Spec match', '规格匹配')
+    .replace('Functional correctness', '功能正确性')
+    .replace('Professional standard', '专业标准')
+    .replace('Request Revision', '要求修改')
+    .replace('Minor Revision', '小幅修改')
+    .replace('Accept', '建议验收')
+    .replace('Reject Ready', '可准备拒绝')
+    .replace('Fresh data and timestamp', '最新数据和时间戳')
+    .replace('Market or source link', '市场或来源链接');
+}
+
+function localizeScoreInterpretation(item) {
+  if (!item) return '请优先查看低分维度中的证据不足项。';
+  return String(item)
+    .replace('The weakest dimension is Acceptance met; review unresolved items in that dimension first.', '当前最弱维度是“验收满足”，应优先查看该维度下的证据不足项。')
+    .replace('The weakest dimension is Spec match; review unresolved items in that dimension first.', '当前最弱维度是“规格匹配”，应优先查看该维度下的未解决项。')
+    .replace('The weakest dimension is Functional correctness; review unresolved items in that dimension first.', '当前最弱维度是“功能正确性”，应优先查看该维度下的未解决项。')
+    .replace('The weakest dimension is Professional standard; review unresolved items in that dimension first.', '当前最弱维度是“专业标准”，应优先查看该维度下的未解决项。');
+}
+
+function localizeAspImprovement(item) {
+  return String(item)
+    .replace('Add verifiable evidence for:', '补充可验证证据：')
+    .replace('Clarify and add concrete evidence for:', '澄清并补充具体证据：')
+    .replace('Revise the deliverable to satisfy:', '修改交付物以满足：')
+    .replace('Fresh data and timestamp', '最新数据和时间戳')
+    .replace('Market or source link', '市场或来源链接');
 }
 
 function displayEvidence(report) {

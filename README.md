@@ -32,6 +32,8 @@ AgentProof is a review assistant, not an official judge. It helps organize accep
 
 AgentProof review skills now include category-specific scope, non-applicable cases, evidence checklists, common issues, follow-up questions, and criterion-level severity.
 
+AgentProof is designed around three OKX.AI roles: users can review before acceptance, ASPs can self-check evidence before delivery, and evaluators can organize dispute evidence using OKX.AI-style dimensions.
+
 The public MVP uses a deterministic fallback mechanism aligned with OKX.AI-style professional arbitration dimensions:
 
 1. Extract explicit requirements from the task description.
@@ -169,6 +171,8 @@ AgentProof 是验收复核助手，不是官方裁决者。它帮助整理验收
 ## 复核机制
 
 AgentProof 的复核 Skill 已包含分类适用范围、不适用场景、必查证据、常见问题、追问建议和标准级优先级。
+
+AgentProof 围绕三类 OKX.AI 角色设计：用户可在验收前复核，ASP 可在交付前自检证据，仲裁者可按 OKX.AI 风格维度整理争议证据。
 
 公开 MVP 使用与 OKX.AI 风格专业仲裁维度对齐的确定性兜底机制：
 
