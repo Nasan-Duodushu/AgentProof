@@ -15,7 +15,7 @@ AgentProof is designed for the moment after an Agent has delivered work and befo
 The demo can:
 
 - Extract explicit requirements from the original task brief
-- Add task-type review checks
+- Add OKX.AI category review skills
 - Compare the deliverable against the requirement checklist
 - Mark each item as Pass / Partial / Fail
 - Generate a reference coverage score
@@ -30,25 +30,27 @@ AgentProof is a review assistant, not an official judge. It helps organize accep
 
 ## Review Method
 
-The public MVP uses a deterministic fallback mechanism:
+The public MVP uses a deterministic fallback mechanism aligned with OKX.AI-style professional arbitration dimensions:
 
-1. Extract requirements from the task description.
-2. Add template checks based on the selected task type.
-3. Match deliverable evidence against each requirement.
-4. Produce a review checklist, reference score, and response draft.
+1. Extract explicit requirements from the task description.
+2. Select an OKX.AI service category review skill, such as World Cup / Prediction Market, Finance / DeFi, Software Service, Life Service, Art & Creative, or General / Other.
+3. Add category-specific evidence checks and review criteria.
+4. Match deliverable evidence against each criterion.
+5. Score each dimension using the formula `(passes + 0.5 × partials) / total × dimension weight`.
+6. Produce a review checklist, reference score, main reasons, and response draft.
 
-This mechanism is intentionally transparent and stable for a public demo. A production version can add AI-assisted semantic review and evidence mapping, while keeping deterministic checks as a fallback.
+This mechanism is intentionally transparent and stable for a public demo. A production version can add AI-assisted semantic review and evidence mapping, while keeping deterministic checks as a fallback. Missing evidence means the item is not verifiable from the provided deliverable; it does not automatically prove provider failure.
 
 ---
 
 ## Demo Scenario
 
-The default sample uses a Solidity audit delivery:
+The default sample uses a World Cup / prediction-market delivery review:
 
-1. The original task asks for an audit report with vulnerability list, severity rating, code location, attack path, reproduction steps, and remediation advice.
-2. The submitted report includes some useful findings.
-3. The report does not clearly provide attack path, reproduction steps, or code-level remediation detail.
-4. AgentProof recommends asking for revision before acceptance.
+1. The original task asks for match scope, current data, probability reasoning, market link, and risk notes.
+2. The submitted brief includes prediction probabilities and likely scores.
+3. The brief lacks some current-data evidence and direct market/source links.
+4. AgentProof recommends asking for supplements before acceptance.
 
 ---
 
@@ -164,14 +166,16 @@ AgentProof 是验收复核助手，不是官方裁决者。它帮助整理验收
 
 ## 复核机制
 
-公开 MVP 使用确定性兜底机制：
+公开 MVP 使用与 OKX.AI 风格专业仲裁维度对齐的确定性兜底机制：
 
-1. 从任务描述中提取要求。
-2. 根据任务类型补充模板检查项。
-3. 将交付物证据逐条匹配到要求。
-4. 生成复核清单、参考分和回复草稿。
+1. 从任务描述中提取明确要求。
+2. 选择 OKX.AI 服务分类复核 Skill，例如世界杯 / 预测市场、金融 / DeFi、软件服务、生活服务、艺术创作或其他。
+3. 根据分类补充证据清单和复核标准。
+4. 将交付物证据逐条匹配到每个标准。
+5. 使用 `(通过项 + 0.5 × 部分满足项) / 总项 × 维度权重` 计算每个维度参考分。
+6. 生成复核清单、参考分、主要原因和回复草稿。
 
-这个机制适合公开演示，稳定且可解释。正式版本可以加入 AI 语义复核和证据映射，同时保留规则检查作为兜底。
+这个机制适合公开演示，稳定且可解释。正式版本可以加入 AI 语义复核和证据映射，同时保留规则检查作为兜底。证据不足表示当前交付物无法验证该项，不等于断言服务方失败。
 
 ---
 

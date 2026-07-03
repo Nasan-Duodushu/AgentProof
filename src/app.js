@@ -1,5 +1,5 @@
-import { sampleData } from './sample-data.js';
-import { buildMarkdownReport, verifyDeliverable } from './verifier.js';
+import { sampleDataByLang } from './sample-data.js';
+import { REVIEW_SKILLS, buildMarkdownReport, verifyDeliverable } from './verifier.js';
 
 const fields = ['jobId', 'taskType', 'taskTitle', 'taskDescription', 'aspPromise', 'deliverableText', 'userConcern'];
 const state = { report: null };
@@ -42,7 +42,7 @@ const I18N = {
     inputTitle: 'Review inputs',
     inputDesc: 'Use the same material a user would provide when hiring AgentProof on OKX.AI.',
     jobIdLabel: 'Job ID <small>(optional)</small>',
-    taskTypeLabel: 'Task type',
+    taskTypeLabel: 'OKX.AI service category',
     taskTitleLabel: 'Task title',
     taskDescriptionLabel: 'Original task and acceptance criteria',
     servicePromiseLabel: 'Service promise <small>(optional)</small>',
@@ -82,7 +82,15 @@ const I18N = {
       deliverableText: 'Paste the Agent deliverable text, report, or delivery summary...',
       userConcern: 'State any concern you want AgentProof to review...'
     },
-    taskOptions: ['Smart Contract Audit', 'Code Delivery', 'Research Report', 'Creative Deliverable', 'General Task'],
+    taskOptions: ['World Cup / Prediction Market', 'Finance / DeFi', 'Software Service', 'Life Service', 'Art & Creative', 'General / Other'],
+    taskFocus: {
+      world_cup_prediction: 'Checks match scope, update time, odds/probability reasoning, market links, and risk boundaries.',
+      finance_defi: 'Checks asset scope, data source, APY/cost logic, liquidity constraints, and risk disclosure.',
+      software_service: 'Checks feature coverage, artifacts, setup instructions, validation evidence, and code quality.',
+      life_service: 'Checks user constraints, actionable steps, safety boundaries, personalization, and clarity.',
+      creative_work: 'Checks style fit, format requirements, audience/use case, publish readiness, and source assets.',
+      general: 'Checks requirement coverage, acceptance criteria, final output, supporting evidence, and completion quality.'
+    },
     rubric: ['Spec match', 'Acceptance met', 'Functional correctness', 'Professional standard'],
     heroRubric: ['Spec match', 'Acceptance', 'Functional', 'Professional'],
     verdicts: {
@@ -91,11 +99,12 @@ const I18N = {
       request_revision: ['Request Revision', 'Medium-high risk', 'Ask the provider to supplement missing evidence before acceptance.'],
       reject_ready: ['Reject Ready', 'High risk', 'The deliverable has major gaps and the user should prepare a structured rejection reason.']
     },
-    status: { pass: 'pass', partial: 'partial', fail: 'fail' },
+    status: { pass: 'pass', partial: 'partial', missing_evidence: 'missing evidence', fail: 'fail' },
     fallbackReasons: {
       pass: 'Most core requirements have supporting evidence in the deliverable.',
       partial: 'Some requirements are mentioned, but the evidence is not detailed enough for confident acceptance.',
-      fail: 'Several required items are missing or not verifiable from the provided deliverable.'
+      missing_evidence: 'Some items cannot be verified from the provided deliverable.',
+      fail: 'Several required items are missing or contradict the requirement.'
     },
     copied: 'Copied to clipboard',
     sampleLoaded: 'Sample loaded'
@@ -132,7 +141,7 @@ const I18N = {
     inputTitle: '复核输入',
     inputDesc: '这里展示的是用户在 OKX.AI 雇佣 AgentProof 时会提供的材料。',
     jobIdLabel: '任务 ID <small>（可选）</small>',
-    taskTypeLabel: '任务类型',
+    taskTypeLabel: 'OKX.AI 服务分类',
     taskTitleLabel: '任务标题',
     taskDescriptionLabel: '原始任务和验收标准',
     servicePromiseLabel: '服务承诺 <small>（可选）</small>',
@@ -172,7 +181,15 @@ const I18N = {
       deliverableText: '粘贴 Agent 提交的交付物正文、报告或交付说明...',
       userConcern: '写下你希望 AgentProof 重点复核的问题...'
     },
-    taskOptions: ['智能合约审计', '代码交付', '研究报告', '创意交付', '通用任务'],
+    taskOptions: ['世界杯 / 预测市场', '金融 / DeFi', '软件服务', '生活服务', '艺术创作', '其他'],
+    taskFocus: {
+      world_cup_prediction: '检查比赛/市场范围、数据更新时间、赔率/概率依据、市场链接和风险边界。',
+      finance_defi: '检查资产范围、数据来源、APY/成本逻辑、流动性约束和风险披露。',
+      software_service: '检查功能覆盖、交付文件、运行说明、验证证据和代码质量。',
+      life_service: '检查用户条件、可执行步骤、安全边界、个性化程度和表达清晰度。',
+      creative_work: '检查风格匹配、格式要求、受众/用途、可发布性和源文件。',
+      general: '检查需求覆盖、验收标准、最终输出、支持证据和完成质量。'
+    },
     rubric: ['规格匹配', '验收满足', '功能正确性', '专业标准'],
     heroRubric: ['规格匹配', '验收满足', '功能正确性', '专业标准'],
     verdicts: {
@@ -181,11 +198,12 @@ const I18N = {
       request_revision: ['要求修改', '中高风险', '建议先要求服务方补充缺失证据，再考虑验收。'],
       reject_ready: ['可准备拒绝', '高风险', '交付物存在明显缺口，用户应准备结构化拒绝理由。']
     },
-    status: { pass: '通过', partial: '部分满足', fail: '未满足' },
+    status: { pass: '通过', partial: '部分满足', missing_evidence: '证据不足', fail: '不满足' },
     fallbackReasons: {
       pass: '多数核心要求在交付物中找到了支持证据。',
       partial: '部分要求被提到，但证据不够具体，直接验收仍有不确定性。',
-      fail: '多项必要内容在交付物中缺失，或无法从现有材料中验证。'
+      missing_evidence: '部分项目无法从当前交付物中验证。',
+      fail: '多项必要内容缺失，或与要求不一致。'
     },
     copied: '已复制到剪贴板',
     sampleLoaded: '示例已加载'
@@ -194,6 +212,16 @@ const I18N = {
 
 function t(key) { return I18N[currentLang][key] || key; }
 function ui() { return I18N[currentLang]; }
+
+function getCurrentSample() {
+  return sampleDataByLang[currentLang] || sampleDataByLang.en;
+}
+
+function loadCurrentLanguageSample(showMessage = true) {
+  fillForm(getCurrentSample());
+  runVerification();
+  if (showMessage) showToast(t('sampleLoaded'));
+}
 
 function readForm() {
   return fields.reduce((data, field) => {
@@ -250,6 +278,7 @@ function renderReport(report) {
   renderMainReasons(report);
   renderRubric(report);
   renderHeroMiniBars(report);
+  updateTaskTypeHint(report.taskType);
   renderCoverage(report.coverageMatrix);
   $('#suggestedReply').textContent = displayReply(report);
   $('#evidencePack').textContent = displayEvidence(report);
@@ -272,8 +301,9 @@ function displayReasons(report) {
   if (report.verdict === 'accept') return ['多数核心要求已在交付物中找到支持证据。'];
   if (!rows.length) return ['建议用户在最终验收前再人工确认一次交付物。'];
   return rows.map((row) => {
-    const name = row.requirement;
-    if (row.status === 'fail') return `${name}：交付物中没有找到清晰的支持证据。`;
+    const name = displayRequirementText(row.requirement);
+    if (row.status === 'fail') return `${name}：交付物与要求不一致或明显不满足。`;
+    if (row.status === 'missing_evidence') return `${name}：当前交付物中没有找到可验证证据。`;
     return `${name}：交付物有提及，但证据不够具体，不适合直接确认验收。`;
   });
 }
@@ -282,7 +312,7 @@ function displayReply(report) {
   if (currentLang === 'en') return report.suggestedReply;
   const newline = String.fromCharCode(10);
   const job = report.jobId ? `（任务 ID：${report.jobId}）` : '';
-  const items = report.missingItems?.length ? report.missingItems.map((item, index) => `${index + 1}. ${item}`).join(newline) : '1. 请补充与验收标准相关的更多证据。';
+  const items = report.missingItems?.length ? report.missingItems.map((item, index) => `${index + 1}. ${displayRequirementText(item)}`).join(newline) : '1. 请补充与验收标准相关的更多证据。';
   if (report.verdict === 'accept') return `我已复核该交付物${job}，主要任务要求看起来已经满足，可以进入验收。`;
   if (report.verdict === 'minor_revision') return `我可以在补充少量内容后验收该交付物${job}。请补充或澄清以下事项：${newline}${newline}${items}${newline}${newline}这些内容补齐后，交付物应可以进入最终验收。`;
   if (report.verdict === 'request_revision') return `我暂时不建议直接验收该交付物${job}。请先补充或修改以下缺失 / 证据不足的内容：${newline}${newline}${items}${newline}${newline}这些事项属于原始任务要求或验收标准的一部分，补充后我再继续验收。`;
@@ -294,10 +324,10 @@ function displayEvidence(report) {
   const newline = String.fromCharCode(10);
   const rows = report.coverageMatrix.filter((row) => row.status !== 'pass').slice(0, 8);
   const findings = rows.length ? rows.map((row, index) => {
-    const label = row.status === 'fail' ? '未满足' : '部分满足';
-    return `${index + 1}. ${row.requirement} — ${label}。${row.issue || row.evidence}`;
+    const label = ui().status[row.status] || row.status;
+    return `${index + 1}. ${displayRequirementText(row.requirement)} — ${label}。${displayIssueText(row.issue) || displayEvidenceText(row.evidence)}`;
   }).join(newline) : '1. 当前复核未发现明显缺失项。';
-  const missing = report.missingItems?.length ? report.missingItems.map((item) => `- ${item}`).join(newline) : '- 未发现明显缺失项';
+  const missing = report.missingItems?.length ? report.missingItems.map((item) => `- ${displayRequirementText(item)}`).join(newline) : '- 未发现明显缺失项';
   return [
     '复核结论',
     '',
@@ -345,8 +375,95 @@ function renderHeroMiniBars(report) {
   });
 }
 
+const REQUIREMENT_ZH = {
+  'Target match or market scope': '目标比赛或市场范围',
+  'Requested outputs covered': '请求输出覆盖情况',
+  'Fresh data and timestamp': '最新数据和时间戳',
+  'Market or source link': '市场或来源链接',
+  'Probability and odds reasoning': '概率和赔率推理',
+  'Risk and uncertainty boundary': '风险和不确定性边界',
+  'Asset, chain, or protocol scope': '资产、链或协议范围',
+  'Requested opportunity output': '机会输出覆盖情况',
+  'Data source and timestamp': '数据来源和时间戳',
+  'Cost, fee, gas, or slippage model': '成本、手续费、Gas 或滑点模型',
+  'Calculation reasoning': '计算依据',
+  'Risk disclosure': '风险披露',
+  'Feature coverage': '功能覆盖',
+  'Deliverable files or artifacts': '交付文件或产物',
+  'Setup and run instructions': '安装和运行说明',
+  'Test or validation evidence': '测试或验证证据',
+  'Error handling and edge cases': '错误处理和边界情况',
+  'Code quality and maintainability': '代码质量和可维护性',
+  'User context and constraints': '用户条件和限制',
+  'Requested plan or answer': '请求的方案或答案',
+  'Actionable steps': '可执行步骤',
+  'Safety and boundary notes': '安全和边界说明',
+  'Personalization quality': '个性化程度',
+  'Clarity and tone': '清晰度和语气',
+  'Theme and style fit': '主题和风格匹配',
+  'Format, size, or quantity requirements': '格式、尺寸或数量要求',
+  'Target audience and use case': '目标受众和使用场景',
+  'Publish-ready quality': '可发布质量',
+  'Source or editable assets': '源文件或可编辑资产',
+  'Creative quality and consistency': '创意质量和一致性',
+  'Requirement coverage': '需求覆盖',
+  'Acceptance criteria coverage': '验收标准覆盖',
+  'Usable final output': '可用最终输出',
+  'Supporting evidence': '支持证据',
+  'Completion quality': '完成质量'
+};
+
+function displayRequirementText(value) {
+  if (currentLang !== 'zh') return value;
+  if (value.startsWith('Service promise:')) return value.replace('Service promise:', '服务承诺：');
+  return REQUIREMENT_ZH[value] || value;
+}
+
+function displayEvidenceText(value) {
+  if (currentLang !== 'zh') return value;
+  return String(value)
+    .replace('Found evidence keywords:', '发现证据关键词：')
+    .replace('Partial signal detected:', '发现部分信号：')
+    .replace('No clear supporting evidence found in the deliverable text.', '当前交付物中未找到清晰支持证据。')
+    .replace('No deliverable text was provided.', '未提供交付物正文。');
+}
+
+function displayIssueText(value) {
+  if (!value) return value;
+  if (currentLang !== 'zh') return value;
+  return String(value)
+    .replace('The deliverable does not provide verifiable evidence for this explicit requirement.', '交付物没有为该明确要求提供可验证证据。')
+    .replace('No current-data evidence or update time is provided.', '未提供当前数据证据或更新时间。')
+    .replace('Source is mentioned but not directly usable.', '提到了来源或市场，但缺少可直接使用的链接。')
+    .replace('Probability is given but reasoning is thin.', '提供了概率，但推理依据不够充分。')
+    .replace('No market/source link is provided.', '未提供市场或来源链接。')
+    .replace('No risk or uncertainty note is provided.', '未提供风险或不确定性说明。');
+}
+
 function renderCoverage(rows) {
-  $('#coverageRows').innerHTML = rows.map((row) => `<tr class="row-${row.status}"><td>${escapeHtml(row.requirement)}</td><td><span class="matrix-status ${row.status}">${ui().status[row.status] || row.status}</span></td><td>${escapeHtml(row.evidence)}</td><td>${row.issue ? escapeHtml(row.issue) : '<span class="muted">—</span>'}</td></tr>`).join('');
+  $('#coverageRows').innerHTML = rows.map((row) => {
+    const meta = `${dimensionLabel(row.dimension)} · ${severityLabel(row.severity)}`;
+    const requirement = displayRequirementText(row.requirement);
+    const evidence = displayEvidenceText(row.evidence);
+    const issue = displayIssueText(row.issue);
+    return `<tr class="row-${row.status}"><td><strong>${escapeHtml(requirement)}</strong><small class="criterion-meta">${escapeHtml(meta)}</small></td><td><span class="matrix-status ${row.status}">${ui().status[row.status] || row.status}</span></td><td>${escapeHtml(evidence)}</td><td>${issue ? escapeHtml(issue) : '<span class="muted">—</span>'}</td></tr>`;
+  }).join('');
+}
+
+function dimensionLabel(value) {
+  const map = { specMatch: ui().rubric[0], acceptanceMet: ui().rubric[1], functionalCorrectness: ui().rubric[2], professionalStandard: ui().rubric[3] };
+  return map[value] || value;
+}
+
+function severityLabel(value) {
+  if (currentLang === 'zh') return { high: '高优先级', medium: '中优先级', low: '低优先级' }[value] || value;
+  return { high: 'high priority', medium: 'medium priority', low: 'low priority' }[value] || value;
+}
+
+function updateTaskTypeHint(taskType = document.getElementById('taskType')?.value) {
+  const hint = document.getElementById('taskTypeHint');
+  if (!hint) return;
+  hint.textContent = ui().taskFocus?.[taskType] || REVIEW_SKILLS[taskType]?.focus || '';
 }
 
 function setActiveTab(name) {
@@ -395,18 +512,26 @@ function applyLanguage() {
   $$('[data-i18n-html]').forEach((element) => { element.innerHTML = dict[element.dataset.i18nHtml] || element.innerHTML; });
   Object.entries(dict.placeholders).forEach(([id, placeholder]) => { const el = document.getElementById(id); if (el) el.placeholder = placeholder; });
   $$('#taskType option').forEach((option, index) => { option.textContent = dict.taskOptions[index] || option.textContent; });
+  updateTaskTypeHint();
   if (state.report) renderReport(state.report);
 }
 
 function init() {
-  fillForm(sampleData);
+  loadCurrentLanguageSample(false);
   applyLanguage();
   runVerification();
-  $$('.lang-btn').forEach((button) => button.addEventListener('click', () => { currentLang = button.dataset.lang; localStorage.setItem('agentproof-lang', currentLang); applyLanguage(); }));
-  $('#loadSample').addEventListener('click', () => { fillForm(sampleData); runVerification(); showToast(t('sampleLoaded')); });
-  $('#heroLoad').addEventListener('click', () => { fillForm(sampleData); runVerification(); showToast(t('sampleLoaded')); });
+  $$('.lang-btn').forEach((button) => button.addEventListener('click', () => {
+    const isDemo = document.getElementById('jobId')?.value?.startsWith('okx-a2a-worldcup-demo');
+    currentLang = button.dataset.lang;
+    localStorage.setItem('agentproof-lang', currentLang);
+    if (isDemo) fillForm(getCurrentSample());
+    applyLanguage();
+  }));
+  $('#loadSample').addEventListener('click', () => loadCurrentLanguageSample(true));
+  $('#heroLoad').addEventListener('click', () => loadCurrentLanguageSample(true));
   $('#heroRun').addEventListener('click', runVerification);
   $('#runVerification').addEventListener('click', runVerification);
+  $('#taskType').addEventListener('change', () => { updateTaskTypeHint(); runVerification(); });
   $('#clearForm').addEventListener('click', clearForm);
   $('#downloadMarkdown').addEventListener('click', downloadMarkdown);
   $$('.tab').forEach((button) => button.addEventListener('click', () => setActiveTab(button.dataset.tab)));

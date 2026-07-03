@@ -786,3 +786,27 @@ tr.row-partial td {
   .recommendation-card { grid-template-columns: 1fr; text-align: center; justify-items: center; }
   .flow-card { padding: 18px; }
 }
+
+/* OKX.AI category review skill refinements */
+.field-hint {
+  margin: 10px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.criterion-meta {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+.matrix-status.missing_evidence {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.28);
+  background: rgba(56, 189, 248, 0.09);
+}
+tr.row-missing_evidence td {
+  background: rgba(56, 189, 248, 0.025);
+}
