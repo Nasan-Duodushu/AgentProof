@@ -861,3 +861,14 @@ tr.row-missing_evidence td {
   background: rgba(148, 163, 184, 0.08);
 }
 tr.row-not_applicable td { opacity: 0.72; }
+
+
+/* Brand logo */
+.brand-mark.logo-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 0 28px rgba(248, 201, 91, 0.18);
+  border: 1px solid rgba(255, 218, 128, 0.18);
+}

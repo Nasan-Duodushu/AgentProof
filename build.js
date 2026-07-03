@@ -8,9 +8,23 @@ try {
   }
   fs.mkdirSync('dist');
   fs.mkdirSync('dist/src');
+  if (fs.existsSync('assets')) {
+    fs.mkdirSync('dist/assets');
+  }
 
   // Copy index.html
   fs.copyFileSync('index.html', 'dist/index.html');
+
+  // Copy assets
+  if (fs.existsSync('assets')) {
+    for (const file of fs.readdirSync('assets')) {
+      const srcPath = path.join('assets', file);
+      const destPath = path.join('dist/assets', file);
+      if (fs.statSync(srcPath).isFile()) {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  }
 
   // Copy src folder files
   const srcDir = 'src';
