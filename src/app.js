@@ -68,6 +68,9 @@ const I18N = {
     copyEvidence: 'Copy Evidence',
     downloadMarkdown: 'Download Markdown',
     copyJson: 'Copy JSON',
+    evidenceCardTitle: 'Evidence to check',
+    issuesCardTitle: 'Common issues',
+    scoreBasisTitle: 'Score basis',
     methodKicker: 'Review method',
     methodTitle: 'Transparent review logic',
     methodDesc: 'The public demo uses requirement extraction, task templates, and deterministic coverage checks. Production review can add AI-assisted semantic analysis and evidence mapping.',
@@ -167,6 +170,9 @@ const I18N = {
     copyEvidence: '复制证据',
     downloadMarkdown: '下载 Markdown',
     copyJson: '复制 JSON',
+    evidenceCardTitle: '必查证据',
+    issuesCardTitle: '常见问题',
+    scoreBasisTitle: '评分依据',
     methodKicker: '复核机制',
     methodTitle: '透明的复核逻辑',
     methodDesc: '公开 Demo 使用任务要求提取、任务类型模板和确定性覆盖检查。正式复核可以加入 AI 语义分析和证据映射。',
@@ -277,6 +283,7 @@ function renderReport(report) {
   updateCircleProgress('totalScoreCircle', report.totalScore, report.verdict);
   renderMainReasons(report);
   renderRubric(report);
+  renderSkillDetails(report);
   renderHeroMiniBars(report);
   updateTaskTypeHint(report.taskType);
   renderCoverage(report.coverageMatrix);
@@ -359,6 +366,82 @@ function renderRubric(report) {
     const percent = Math.round((value / max) * 100);
     return `<div class="rubric-card"><span>${label}</span><strong>${value}<small>/${max}</small></strong><div class="bar"><b style="width:${percent}%"></b></div></div>`;
   }).join('');
+}
+
+function renderSkillDetails(report) {
+  renderSimpleList('#evidenceToCheckList', localizeList(report.evidenceToCheck || [], 'evidence'));
+  renderSimpleList('#commonIssuesList', localizeList(report.commonIssues || [], 'issues'));
+  renderSimpleList('#scoreBasisList', buildScoreBasisLines(report));
+}
+
+function renderSimpleList(selector, items) {
+  const element = document.querySelector(selector);
+  if (!element) return;
+  element.innerHTML = items.slice(0, 6).map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+}
+
+function buildScoreBasisLines(report) {
+  const basis = report.scoreBasis || {};
+  if (currentLang === 'zh') {
+    return [
+      `规格匹配：${basis.specMatch?.pass || 0} 通过 / ${basis.specMatch?.partial || 0} 部分 / ${basis.specMatch?.missingEvidence || 0} 证据不足`,
+      `验收满足：${basis.acceptanceMet?.pass || 0} 通过 / ${basis.acceptanceMet?.partial || 0} 部分 / ${basis.acceptanceMet?.missingEvidence || 0} 证据不足`,
+      `功能正确性：${basis.functionalCorrectness?.pass || 0} 通过 / ${basis.functionalCorrectness?.partial || 0} 部分 / ${basis.functionalCorrectness?.missingEvidence || 0} 证据不足`,
+      `专业标准：${basis.professionalStandard?.pass || 0} 通过 / ${basis.professionalStandard?.partial || 0} 部分 / ${basis.professionalStandard?.missingEvidence || 0} 证据不足`
+    ];
+  }
+  return [
+    `Spec match: ${basis.specMatch?.pass || 0} pass / ${basis.specMatch?.partial || 0} partial / ${basis.specMatch?.missingEvidence || 0} missing`,
+    `Acceptance met: ${basis.acceptanceMet?.pass || 0} pass / ${basis.acceptanceMet?.partial || 0} partial / ${basis.acceptanceMet?.missingEvidence || 0} missing`,
+    `Functional correctness: ${basis.functionalCorrectness?.pass || 0} pass / ${basis.functionalCorrectness?.partial || 0} partial / ${basis.functionalCorrectness?.missingEvidence || 0} missing`,
+    `Professional standard: ${basis.professionalStandard?.pass || 0} pass / ${basis.professionalStandard?.partial || 0} partial / ${basis.professionalStandard?.missingEvidence || 0} missing`
+  ];
+}
+
+const LIST_ZH = {
+  evidence: {
+    'match or market scope': '比赛或市场范围',
+    'data timestamp': '数据时间戳',
+    'odds or market price': '赔率或市场价格',
+    'model probability': '模型概率',
+    'score prediction': '比分预测',
+    'injury or lineup note': '伤病或阵容说明',
+    'market link': '市场链接',
+    'risk disclaimer': '风险说明',
+    'asset or protocol scope': '资产或协议范围',
+    'data source': '数据来源',
+    'APY/APR or price data': 'APY/APR 或价格数据',
+    'gas/slippage/cost assumptions': 'Gas / 滑点 / 成本假设',
+    'liquidity': '流动性',
+    'risk notes': '风险说明',
+    'source files': '源文件',
+    'feature list': '功能清单',
+    'setup instructions': '安装说明',
+    'dependencies': '依赖项',
+    'test result': '测试结果',
+    'run/deploy command': '运行 / 部署命令',
+    'logs/screenshots': '日志 / 截图',
+    'security notes': '安全说明'
+  },
+  issues: {
+    'No data timestamp or stale odds': '没有数据时间戳或赔率过时',
+    'No direct market/source link': '没有直接市场或来源链接',
+    'Prediction stated as certainty instead of probability': '把预测说成确定结果',
+    'No injury, lineup, or form source when those factors are used': '使用伤病、阵容或状态时没有来源',
+    'No risk or uncertainty note': '没有风险或不确定性说明',
+    'No timestamp or data source': '没有时间戳或数据来源',
+    'APY shown without calculation logic': '展示 APY 但没有计算逻辑',
+    'Gas, slippage, liquidity, or bridge cost ignored': '忽略 Gas、滑点、流动性或跨链成本',
+    'No source files or repository link': '没有源文件或仓库链接',
+    'No setup or run instructions': '没有安装或运行说明',
+    'No test, log, screenshot, or validation evidence': '没有测试、日志、截图或验证证据'
+  }
+};
+
+function localizeList(items, type) {
+  if (currentLang !== 'zh') return items;
+  const map = LIST_ZH[type] || {};
+  return items.map((item) => map[item] || item);
 }
 
 function renderHeroMiniBars(report) {

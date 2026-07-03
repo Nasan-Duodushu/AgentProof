@@ -95,6 +95,156 @@ export const REVIEW_SKILLS = {
   }
 };
 
+
+const REVIEW_SKILL_DETAILS = {
+  world_cup_prediction: {
+    scope: [
+      'World Cup or sports prediction-market briefs',
+      'Match outcome, upset, group qualification, or market-pricing analysis',
+      'Polymarket or similar prediction-market research deliverables'
+    ],
+    notApplicable: [
+      'Actual bet execution or custody of user funds',
+      'Guaranteed profit or fixed betting outcome claims',
+      'Reports without a clearly identified match, team, or market'
+    ],
+    commonIssues: [
+      'No data timestamp or stale odds',
+      'No direct market/source link',
+      'Prediction stated as certainty instead of probability',
+      'No injury, lineup, or form source when those factors are used',
+      'No risk or uncertainty note'
+    ],
+    followUpQuestions: [
+      'Please provide the data timestamp and the source used for odds or market prices.',
+      'Please add the relevant Polymarket or equivalent market link.',
+      'Please explain how the probability or score prediction was derived.',
+      'Please clarify whether injury, lineup, or form assumptions were used.'
+    ]
+  },
+  finance_defi: {
+    scope: [
+      'Yield, funding-rate, arbitrage, RWA, token-risk, or DeFi opportunity reports',
+      'Reports comparing APY/APR, spreads, liquidity, fees, or risk factors',
+      'Read-only market intelligence deliverables'
+    ],
+    notApplicable: [
+      'Actual trade execution or fund custody',
+      'Guaranteed-return claims',
+      'Reports without asset, chain, protocol, or data-source scope'
+    ],
+    commonIssues: [
+      'No timestamp or data source',
+      'APY shown without calculation logic',
+      'Gas, slippage, liquidity, or bridge cost ignored',
+      'Thin or impossible-to-execute opportunities mixed into the ranking',
+      'No downside or protocol-risk disclosure'
+    ],
+    followUpQuestions: [
+      'Please provide the source and timestamp for the APY / funding / price data.',
+      'Please show how the net opportunity was calculated after fees, gas, liquidity, and slippage.',
+      'Please identify which opportunities are executable and which are only theoretical.',
+      'Please add protocol, oracle, liquidity, and depeg risk notes where relevant.'
+    ]
+  },
+  software_service: {
+    scope: [
+      'Code, scripts, APIs, MCP endpoints, DApps, bots, smart-contract checks, and technical documents',
+      'Deliverables that can be verified through artifacts, commands, logs, tests, or screenshots'
+    ],
+    notApplicable: [
+      'Tasks with no code, artifact, or technical deliverable material',
+      'Formal security certification claims without evidence',
+      'Production deployment or fund-handling claims without user confirmation'
+    ],
+    commonIssues: [
+      'No source files or repository link',
+      'No setup or run instructions',
+      'No test, log, screenshot, or validation evidence',
+      'Core feature missing or not mapped to the original requirement',
+      'Hardcoded secrets, unsafe defaults, or unclear deployment steps'
+    ],
+    followUpQuestions: [
+      'Please provide the repository, files, or artifact package for the deliverable.',
+      'Please add install, run, and deploy instructions with required versions.',
+      'Please include tests, logs, screenshots, or command output proving the core flow works.',
+      'Please map each original requirement to the implemented feature or file.'
+    ]
+  },
+  life_service: {
+    scope: [
+      'Cooking, study planning, routine planning, wellness-style advice, entertainment, and daily-life guidance',
+      'Deliverables that should be personalized to user constraints and actionable steps'
+    ],
+    notApplicable: [
+      'Medical, legal, or financial diagnosis as a substitute for professionals',
+      'Unsafe instructions involving health, minors, allergies, or medication without boundary notes',
+      'Generic advice with no user context'
+    ],
+    commonIssues: [
+      'User constraints ignored',
+      'Steps too vague to execute',
+      'No safety boundary for sensitive advice',
+      'No time, budget, allergy, age, or condition consideration when provided',
+      'Overconfident or deterministic claims in entertainment/fortune-style content'
+    ],
+    followUpQuestions: [
+      'Please restate the user constraints used to build the plan.',
+      'Please add step-by-step instructions and timing where relevant.',
+      'Please add safety boundaries and professional-care disclaimers for sensitive advice.',
+      'Please explain how the output is personalized to the user context.'
+    ]
+  },
+  creative_work: {
+    scope: [
+      'Copywriting, images, brand concepts, social posts, UI concepts, video scripts, and creative assets',
+      'Deliverables judged by style fit, format requirements, audience fit, and publish readiness'
+    ],
+    notApplicable: [
+      'Pure technical code delivery',
+      'Claims of legal ownership or IP clearance without evidence',
+      'Tasks requiring source files when only screenshots are provided'
+    ],
+    commonIssues: [
+      'Style or audience mismatch',
+      'Required size, format, quantity, or language missing',
+      'Not ready to publish or use',
+      'No source or editable asset when required',
+      'Inconsistent tone, visual direction, or brand language'
+    ],
+    followUpQuestions: [
+      'Please provide the final asset in the requested format and size.',
+      'Please explain how the output matches the target audience, style, and use case.',
+      'Please include source or editable files if they were part of the task.',
+      'Please provide platform-specific versions if the task required them.'
+    ]
+  },
+  general: {
+    scope: [
+      'Tasks that do not cleanly fit a specific OKX.AI category',
+      'Simple deliverables where original requirements and acceptance criteria are the primary basis'
+    ],
+    notApplicable: [
+      'Highly specialized disputes that need a domain-specific review skill',
+      'Tasks with no original request or no deliverable material',
+      'Cases requiring official arbitration rather than pre-acceptance review'
+    ],
+    commonIssues: [
+      'Original requirement not covered',
+      'Acceptance criteria not addressed',
+      'Final output unclear or incomplete',
+      'No supporting evidence',
+      'Response is generic and not tied to the user request'
+    ],
+    followUpQuestions: [
+      'Please provide the original task brief and any explicit acceptance criteria.',
+      'Please clarify which deliverable should be reviewed.',
+      'Please add evidence supporting the completed output.',
+      'Please identify which part of the delivery you are unsure about.'
+    ]
+  }
+};
+
 const ACTIONS = [
   { min: 80, verdict: 'accept', label: 'Accept', risk: 'Low risk', summary: 'The deliverable appears ready for acceptance.' },
   { min: 75, verdict: 'minor_revision', label: 'Minor Revision', risk: 'Medium risk', summary: 'The deliverable is mostly complete but should be supplemented before final acceptance.' },
@@ -105,6 +255,7 @@ const ACTIONS = [
 export function verifyDeliverable(input = {}) {
   const normalized = normalizeInput(input);
   const skill = REVIEW_SKILLS[normalized.taskType] || REVIEW_SKILLS.general;
+  const skillDetails = REVIEW_SKILL_DETAILS[normalized.taskType] || REVIEW_SKILL_DETAILS.general;
   const explicitCriteria = extractExplicitRequirements(normalized.taskDescription).map((requirement, index) => buildExplicitCriterion(requirement, index));
   const promiseCriteria = normalized.aspPromise ? [buildExplicitCriterion(`Service promise: ${normalized.aspPromise}`, 'promise')] : [];
   const criteria = [...explicitCriteria, ...promiseCriteria, ...skill.criteria];
@@ -116,7 +267,7 @@ export function verifyDeliverable(input = {}) {
   const missingItems = coverageMatrix.filter((row) => row.status !== 'pass').map((row) => row.requirement);
   const mainReasons = buildMainReasons(action, coverageMatrix, missingItems);
   const methodNote = 'This public MVP uses OKX.AI-style review dimensions, task-category review skills, and deterministic evidence checks. It is a review aid, not an official ruling.';
-  return { jobId: normalized.jobId, taskTitle: normalized.taskTitle, taskType: normalized.taskType, skillLabel: skill.label, skillFocus: skill.focus, evidenceToCheck: skill.evidenceToCheck, reviewMode: 'deterministic_fallback', methodNote, verdict: action.verdict, verdictLabel: action.label, riskLevel: action.risk, summary: action.summary, totalScore, scores, scoreBasis: buildScoreBasis(coverageMatrix), statusCounts: counts, coverageMatrix, missingItems, mainReasons, suggestedReply: buildSuggestedReply(normalized, action, coverageMatrix), evidencePack: buildEvidencePack(normalized, action, scores, totalScore, coverageMatrix, missingItems, skill), generatedAt: new Date().toISOString() };
+  return { jobId: normalized.jobId, taskTitle: normalized.taskTitle, taskType: normalized.taskType, skillLabel: skill.label, skillFocus: skill.focus, skillScope: skillDetails.scope, skillNotApplicable: skillDetails.notApplicable, commonIssues: skillDetails.commonIssues, followUpQuestions: skillDetails.followUpQuestions, evidenceToCheck: skill.evidenceToCheck, reviewMode: 'deterministic_fallback', methodNote, verdict: action.verdict, verdictLabel: action.label, riskLevel: action.risk, summary: action.summary, totalScore, scores, scoreBasis: buildScoreBasis(coverageMatrix), statusCounts: counts, coverageMatrix, missingItems, mainReasons, suggestedReply: buildSuggestedReply(normalized, action, coverageMatrix), evidencePack: buildEvidencePack(normalized, action, scores, totalScore, coverageMatrix, missingItems, skill), generatedAt: new Date().toISOString() };
 }
 
 export function buildMarkdownReport(report) {

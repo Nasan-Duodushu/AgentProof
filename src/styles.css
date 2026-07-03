@@ -810,3 +810,37 @@ tr.row-partial td {
 tr.row-missing_evidence td {
   background: rgba(56, 189, 248, 0.025);
 }
+
+
+/* Professional review skill detail cards */
+.skill-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 18px;
+}
+.skill-detail-card {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 16px;
+  padding: 14px;
+}
+.skill-detail-card h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+.skill-detail-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.skill-detail-card li + li {
+  margin-top: 6px;
+}
+@media (max-width: 920px) {
+  .skill-detail-grid { grid-template-columns: 1fr; }
+}
