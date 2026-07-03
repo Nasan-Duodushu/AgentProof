@@ -19,7 +19,7 @@ export async function onRequestPost({ request }) {
     return Response.json(
       {
         error: 'invalid_request',
-        message: error instanceof Error ? error.message : 'Unable to verify deliverable'
+        message: error instanceof Error ? error.message : 'Unable to review deliverable'
       },
       { status: 400, headers: corsHeaders }
     );
@@ -29,9 +29,13 @@ export async function onRequestPost({ request }) {
 export async function onRequestGet() {
   return Response.json(
     {
-      name: 'AgentProof Verify API',
+      name: 'AgentProof Review API',
       method: 'POST',
       path: '/api/verify',
+      purpose: 'Review an Agent deliverable against the original task before acceptance.',
+      boundary: 'Review assistant only; not an official ruling.',
+      reviewMode: 'deterministic_fallback',
+      methodNote: 'The public MVP uses requirement extraction, task-type templates, and deterministic coverage checks. Production review can add AI-assisted semantic analysis and evidence mapping.',
       requiredFields: ['taskDescription', 'deliverableText'],
       optionalFields: ['jobId', 'taskTitle', 'taskType', 'aspPromise', 'userConcern']
     },

@@ -108,10 +108,15 @@ export function verifyDeliverable(input = {}) {
   const action = ACTIONS.find((item) => totalScore >= item.min) || ACTIONS[ACTIONS.length - 1];
   const missingItems = coverageMatrix.filter((row) => row.status !== 'pass').map((row) => row.requirement).slice(0, 8);
 
+  const mainReasons = buildMainReasons(action, coverageMatrix, missingItems);
+  const methodNote = 'This public MVP uses deterministic requirement extraction, task-type templates, and keyword-based coverage checks. It is a review aid, not an official ruling.';
+
   return {
     jobId: normalized.jobId,
     taskTitle: normalized.taskTitle,
     taskType: normalized.taskType,
+    reviewMode: 'deterministic_fallback',
+    methodNote,
     verdict: action.verdict,
     verdictLabel: action.label,
     riskLevel: action.risk,
@@ -121,6 +126,7 @@ export function verifyDeliverable(input = {}) {
     statusCounts: counts,
     coverageMatrix,
     missingItems,
+    mainReasons,
     suggestedReply: buildSuggestedReply(normalized, action, missingItems),
     evidencePack: buildEvidencePack(normalized, action, scores, totalScore, coverageMatrix, missingItems),
     generatedAt: new Date().toISOString()
@@ -273,6 +279,28 @@ function evaluateProfessionalStandard(input, matrix) {
   const lengthScore = text.length > 1200 ? 0.25 : text.length > 500 ? 0.18 : text.length > 200 ? 0.1 : 0;
   const failRate = matrix.filter((row) => row.status === 'fail').length / Math.max(matrix.length, 1);
   return clamp(0.45 + lengthScore + (hasStructure ? 0.16 : 0) + (hasEvidence ? 0.14 : 0) - failRate * 0.25, 0.1, 1);
+}
+
+function buildMainReasons(action, matrix, missingItems) {
+  if (action.verdict === 'accept') {
+    return ['Most core requirements have supporting evidence in the provided deliverable.'];
+  }
+
+  const rows = matrix.filter((row) => row.status !== 'pass').slice(0, 4);
+  const reasons = rows.map((row) => {
+    if (row.status === 'fail') return `${row.requirement}: no clear supporting evidence was found.`;
+    return `${row.requirement}: partially addressed, but the evidence is not detailed enough for confident acceptance.`;
+  });
+
+  if (!reasons.length && missingItems.length) {
+    reasons.push(`The review found unresolved items: ${missingItems.slice(0, 3).join(', ')}.`);
+  }
+
+  if (!reasons.length) {
+    reasons.push('The deliverable should be reviewed manually before final acceptance.');
+  }
+
+  return reasons;
 }
 
 function buildSuggestedReply(input, action, missingItems) {

@@ -3,11 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="AgentProof is a premium pre-acceptance verifier for OKX.AI A2A task deliverables."
-    />
-    <title>AgentProof — Pre-Acceptance Verifier for OKX.AI</title>
+    <meta name="description" content="AgentProof reviews OKX.AI Agent deliverables before acceptance." />
+    <title>AgentProof — Agent Delivery Review for OKX.AI</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2310b981'/%3E%3Ctext x='50' y='62' font-size='42' text-anchor='middle' font-family='Arial' font-weight='900' fill='%23030712'%3EAP%3C/text%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,51 +18,39 @@
             <div class="brand-mark">AP</div>
             <div class="brand-text">
               <h2>AgentProof</h2>
-              <span>OKX.AI A2A verifier</span>
+              <span data-i18n="brandSubtitle">Agent delivery review</span>
             </div>
           </div>
           <div class="nav-links">
-            <a href="#workspace">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-              Workspace
-            </a>
-            <a href="#api">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-              API
-            </a>
-            <a href="#asp">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-              Use Cases
-            </a>
+            <a href="#workspace" data-i18n="navWorkspace">Workspace</a>
+            <a href="#review-flow" data-i18n="navFlow">Review Flow</a>
+            <a href="#method" data-i18n="navMethod">Method</a>
+          </div>
+          <div class="lang-switch">
+            <button class="lang-btn" data-lang="en">EN</button>
+            <button class="lang-btn" data-lang="zh">中文</button>
           </div>
         </nav>
 
         <section class="hero-grid">
           <div class="hero-copy">
-            <div class="eyebrow">Built for agent-native task verification</div>
+            <div class="eyebrow" data-i18n="eyebrow">For OKX.AI Agent delivery review</div>
             <h1>
-              <span class="gradient-text">Agents deliver.</span>
-              <span class="gradient-text">AgentProof verifies.</span>
+              <span class="gradient-text" data-i18n="heroLine1">Review an Agent delivery</span>
+              <span class="gradient-text" data-i18n="heroLine2">before you accept it.</span>
             </h1>
-            <p>
-              An automated pre-acceptance checker for OKX.AI A2A workflows. Copy the task description and deliverable text, verify requirements coverage in 1 second, and secure evidence-style reports before taking action.
+            <p data-i18n="heroDesc">
+              Paste the original task and the delivered result. AgentProof checks possible gaps, evidence quality, and drafts a clear follow-up response.
             </p>
             <div class="hero-actions">
-              <button class="primary" id="heroRun">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                Run Verification
-              </button>
-              <button class="secondary" id="heroLoad">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                Load Solidity Sample
-              </button>
+              <button class="primary" id="heroRun" data-i18n="runReview">Run Review</button>
+              <button class="secondary" id="heroLoad" data-i18n="loadSample">Load Sample Case</button>
             </div>
             <div class="trust-row">
-              <span class="trust-label">Key modules:</span>
-              <span>OKX.AI-style scoring</span>
-              <span>4-Dimensional rubric</span>
-              <span>Coverage matrix</span>
-              <span>Evidence pack</span>
+              <span class="trust-label" data-i18n="notJudge">Review assistant, not an official judge</span>
+              <span data-i18n="trustChecklist">Requirement checklist</span>
+              <span data-i18n="trustEvidence">Evidence notes</span>
+              <span data-i18n="trustReply">Response draft</span>
             </div>
           </div>
 
@@ -76,64 +61,55 @@
                 <circle id="heroScoreCircle" class="progress-ring" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89"></circle>
               </svg>
               <div class="score-text-overlay">
-                <span id="heroScore">72</span>
-                <small>/100</small>
+                <span id="heroScore">69</span>
+                <small data-i18n="referenceScoreShort">ref.</small>
               </div>
             </div>
             <div>
-              <p class="card-label">Current verdict</p>
+              <p class="card-label" data-i18n="currentRecommendation">Current recommendation</p>
               <h3 id="heroVerdict">Request Revision</h3>
-              <p class="muted">
-                Missing attack path and code-level remediation evidence in the demo deliverable.
-              </p>
+              <p class="muted" data-i18n="heroMuted">The sample delivery is useful, but key acceptance evidence is missing.</p>
             </div>
             <div class="mini-bars">
-              <div class="mini-bar-row">
-                <span>Spec match</span>
-                <strong>80%</strong>
-                <div class="bar-outer"><div class="bar-inner" style="--w:80%"></div></div>
-              </div>
-              <div class="mini-bar-row">
-                <span>Acceptance</span>
-                <strong>60%</strong>
-                <div class="bar-outer"><div class="bar-inner" style="--w:60%"></div></div>
-              </div>
-              <div class="mini-bar-row">
-                <span>Functional</span>
-                <strong>70%</strong>
-                <div class="bar-outer"><div class="bar-inner" style="--w:70%"></div></div>
-              </div>
-              <div class="mini-bar-row">
-                <span>Professional</span>
-                <strong>80%</strong>
-                <div class="bar-outer"><div class="bar-inner" style="--w:80%"></div></div>
-              </div>
+              <div class="mini-bar-row"><span>Spec match</span><strong>68%</strong><div class="bar-outer"><div class="bar-inner" style="--w:68%"></div></div></div>
+              <div class="mini-bar-row"><span>Acceptance</span><strong>70%</strong><div class="bar-outer"><div class="bar-inner" style="--w:70%"></div></div></div>
+              <div class="mini-bar-row"><span>Functional</span><strong>60%</strong><div class="bar-outer"><div class="bar-inner" style="--w:60%"></div></div></div>
+              <div class="mini-bar-row"><span>Professional</span><strong>90%</strong><div class="bar-outer"><div class="bar-inner" style="--w:90%"></div></div></div>
             </div>
           </div>
         </section>
       </header>
 
+      <section id="review-flow" class="flow-section">
+        <div class="section-head standalone">
+          <div>
+            <span class="section-kicker" data-i18n="flowKicker">How it works</span>
+            <h2 data-i18n="flowTitle">A second-opinion review before acceptance</h2>
+            <p data-i18n="flowDesc">AgentProof is designed for the moment after another Agent delivers work and before the user accepts it.</p>
+          </div>
+        </div>
+        <div class="flow-grid">
+          <article class="flow-card"><b>01</b><h3 data-i18n="flow1Title">Paste the original task</h3><p data-i18n="flow1Desc">Include the request, acceptance criteria, and service promise if available.</p></article>
+          <article class="flow-card"><b>02</b><h3 data-i18n="flow2Title">Paste the deliverable</h3><p data-i18n="flow2Desc">Add the report, code summary, research output, or delivery text.</p></article>
+          <article class="flow-card"><b>03</b><h3 data-i18n="flow3Title">Get a review pack</h3><p data-i18n="flow3Desc">Receive a checklist, possible gaps, evidence notes, and a response draft.</p></article>
+        </div>
+      </section>
+
       <main id="workspace" class="workspace">
         <section class="panel input-panel">
           <div class="section-head">
             <div class="section-head-title">
-              <span class="section-kicker">Workspace</span>
-              <h2>Verification inputs</h2>
-              <p>Configure task constraints and copy deliverables.</p>
+              <span class="section-kicker" data-i18n="workspaceKicker">Workspace</span>
+              <h2 data-i18n="inputTitle">Review inputs</h2>
+              <p data-i18n="inputDesc">Use the same material a user would provide when hiring AgentProof on OKX.AI.</p>
             </div>
-            <button class="ghost" id="loadSample">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Load Demo
-            </button>
+            <button class="ghost" id="loadSample" data-i18n="loadDemo">Load Demo</button>
           </div>
 
           <div class="form-grid">
+            <label><span data-i18n-html="jobIdLabel">Job ID <small>(optional)</small></span><input id="jobId" /></label>
             <label>
-              <span>Job ID <small>(Optional)</small></span>
-              <input id="jobId" placeholder="e.g. okx-a2a-task-402" />
-            </label>
-            <label>
-              <span>Task type</span>
+              <span data-i18n="taskTypeLabel">Task type</span>
               <select id="taskType">
                 <option value="smart_contract_audit">Smart Contract Audit</option>
                 <option value="code_delivery">Code Delivery</option>
@@ -144,190 +120,91 @@
             </label>
           </div>
 
-          <label>
-            <span>Task title</span>
-            <input id="taskTitle" placeholder="e.g. ERC20 audit report or website layout design" />
-          </label>
-          <label>
-            <span>Original task description & criteria</span>
-            <textarea id="taskDescription" rows="5" placeholder="Paste the original OKX.AI brief and acceptance criteria..."></textarea>
-          </label>
-          <label>
-            <span>ASP service promise <small>(Optional)</small></span>
-            <textarea id="aspPromise" rows="3" placeholder="Paste the service description or delivery promise from the registry..."></textarea>
-          </label>
-          <label>
-            <span>Deliverable text</span>
-            <textarea id="deliverableText" rows="7" placeholder="Paste the raw text of the deliverable delivered by the agent..."></textarea>
-          </label>
-          <label>
-            <span>User concern <small>(Optional)</small></span>
-            <textarea id="userConcern" rows="2" placeholder="State any specific concerns you want the checker to verify..."></textarea>
-          </label>
+          <label><span data-i18n="taskTitleLabel">Task title</span><input id="taskTitle" /></label>
+          <label><span data-i18n="taskDescriptionLabel">Original task and acceptance criteria</span><textarea id="taskDescription" rows="5"></textarea></label>
+          <label><span data-i18n-html="servicePromiseLabel">Service promise <small>(optional)</small></span><textarea id="aspPromise" rows="3"></textarea></label>
+          <label><span data-i18n="deliverableLabel">Agent deliverable</span><textarea id="deliverableText" rows="7"></textarea></label>
+          <label><span data-i18n-html="concernLabel">User concern <small>(optional)</small></span><textarea id="userConcern" rows="2"></textarea></label>
 
           <div class="button-row">
-            <button class="primary" id="runVerification">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              Run Verification
-            </button>
-            <button class="ghost" id="clearForm">Clear Form</button>
+            <button class="primary" id="runVerification" data-i18n="runReview">Run Review</button>
+            <button class="ghost" id="clearForm" data-i18n="clearForm">Clear Form</button>
           </div>
         </section>
 
         <section class="panel result-panel">
           <div class="section-head">
             <div class="section-head-title">
-              <span class="section-kicker">Audit Report</span>
-              <h2>Verification result</h2>
-              <p>Generated acceptance analysis and evidence-style materials.</p>
+              <span class="section-kicker" data-i18n="reportKicker">Review Report</span>
+              <h2 data-i18n="resultTitle">Acceptance review</h2>
+              <p data-i18n="resultDesc">A structured recommendation and evidence-style review notes.</p>
             </div>
-            <span class="status-pill" id="riskPill">Medium risk</span>
+            <span class="status-pill" id="riskPill">Medium-high risk</span>
           </div>
 
-          <div class="score-layout">
-            <div class="score-circle-wrapper">
+          <div class="recommendation-card">
+            <div class="score-circle-wrapper compact">
               <svg class="score-svg" viewBox="0 0 100 100">
                 <circle class="bg-ring" cx="50" cy="50" r="42"></circle>
                 <circle id="totalScoreCircle" class="progress-ring" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89"></circle>
               </svg>
-              <div class="score-text-overlay">
-                <span id="totalScore">72</span>
-                <small>/100</small>
-              </div>
+              <div class="score-text-overlay"><span id="totalScore">69</span><small data-i18n="referenceScoreShort">ref.</small></div>
             </div>
-            <div>
-              <p class="card-label">Suggested action</p>
+            <div class="recommendation-copy">
+              <p class="card-label" data-i18n="recommendationLabel">Review recommendation</p>
               <h3 id="verdictLabel">Request Revision</h3>
-              <p class="muted" id="verdictSummary">
-                Ask the provider to supplement missing evidence before acceptance.
-              </p>
+              <p class="muted" id="verdictSummary">Ask the provider to supplement missing evidence before acceptance.</p>
             </div>
+          </div>
+
+          <div class="reason-panel">
+            <div class="reason-header"><span data-i18n="whyTitle">Why this matters</span></div>
+            <ul id="mainReasons"></ul>
           </div>
 
           <div class="rubric-grid" id="rubricGrid"></div>
 
           <div class="tabs">
-            <button class="tab active" data-tab="matrix">Coverage Matrix</button>
-            <button class="tab" data-tab="reply">Suggested Reply</button>
-            <button class="tab" data-tab="evidence">Evidence Pack</button>
+            <button class="tab active" data-tab="matrix" data-i18n="tabChecklist">Review Checklist</button>
+            <button class="tab" data-tab="reply" data-i18n="tabReply">Response Draft</button>
+            <button class="tab" data-tab="evidence" data-i18n="tabEvidence">Evidence Notes</button>
             <button class="tab" data-tab="json">JSON</button>
           </div>
 
-          <!-- Coverage Matrix Tab -->
           <div class="tab-body active" id="matrixTab">
+            <p class="method-note" data-i18n="checklistNote">The checklist maps each task requirement to evidence found in the deliverable. It is a review aid, not an official ruling.</p>
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr>
-                    <th>Requirement</th>
-                    <th>Status</th>
-                    <th>Evidence</th>
-                    <th>Issue</th>
-                  </tr>
-                </thead>
+                <thead><tr><th data-i18n="thRequirement">Requirement</th><th data-i18n="thStatus">Status</th><th data-i18n="thEvidence">Evidence</th><th data-i18n="thIssue">Issue</th></tr></thead>
                 <tbody id="coverageRows"></tbody>
               </table>
             </div>
           </div>
 
-          <!-- Suggested Reply Tab -->
           <div class="tab-body" id="replyTab">
-            <div class="copy-card">
-              <div class="terminal-header">
-                <div class="terminal-dots">
-                  <div class="terminal-dot r"></div>
-                  <div class="terminal-dot y"></div>
-                  <div class="terminal-dot g"></div>
-                </div>
-                <div class="terminal-title">suggested-reply.md</div>
-                <div class="terminal-actions">
-                  <button class="terminal-action-btn" data-copy="suggestedReply">
-                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    Copy Reply
-                  </button>
-                </div>
-              </div>
-              <pre id="suggestedReply"></pre>
-            </div>
+            <div class="copy-card"><div class="terminal-header"><div class="terminal-dots"><div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div></div><div class="terminal-title" data-i18n="replyFile">response-draft.md</div><button class="terminal-action-btn" data-copy="suggestedReply" data-i18n="copyReply">Copy Reply</button></div><pre id="suggestedReply"></pre></div>
           </div>
 
-          <!-- Evidence Pack Tab -->
           <div class="tab-body" id="evidenceTab">
-            <div class="copy-card">
-              <div class="terminal-header">
-                <div class="terminal-dots">
-                  <div class="terminal-dot r"></div>
-                  <div class="terminal-dot y"></div>
-                  <div class="terminal-dot g"></div>
-                </div>
-                <div class="terminal-title">evidence-pack.md</div>
-                <div class="terminal-actions">
-                  <button class="terminal-action-btn" data-copy="evidencePack">
-                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    Copy Pack
-                  </button>
-                  <button class="terminal-action-btn" id="downloadMarkdown" style="color: var(--accent-2);">
-                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Export Pack
-                  </button>
-                </div>
-              </div>
-              <pre id="evidencePack"></pre>
-            </div>
+            <div class="copy-card"><div class="terminal-header"><div class="terminal-dots"><div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div></div><div class="terminal-title" data-i18n="evidenceFile">evidence-notes.md</div><div class="terminal-actions"><button class="terminal-action-btn" data-copy="evidencePack" data-i18n="copyEvidence">Copy Evidence</button><button class="terminal-action-btn" id="downloadMarkdown" data-i18n="downloadMarkdown">Download Markdown</button></div></div><pre id="evidencePack"></pre></div>
           </div>
 
-          <!-- JSON Tab -->
           <div class="tab-body" id="jsonTab">
-            <div class="copy-card">
-              <div class="terminal-header">
-                <div class="terminal-dots">
-                  <div class="terminal-dot r"></div>
-                  <div class="terminal-dot y"></div>
-                  <div class="terminal-dot g"></div>
-                </div>
-                <div class="terminal-title">report.json</div>
-                <div class="terminal-actions">
-                  <button class="terminal-action-btn" data-copy="jsonReport">
-                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    Copy JSON
-                  </button>
-                </div>
-              </div>
-              <pre id="jsonReport"></pre>
-            </div>
+            <div class="copy-card"><div class="terminal-header"><div class="terminal-dots"><div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div></div><div class="terminal-title">report.json</div><button class="terminal-action-btn" data-copy="jsonReport" data-i18n="copyJson">Copy JSON</button></div><pre id="jsonReport"></pre></div>
           </div>
         </section>
       </main>
 
-      <section id="api" class="info-grid">
+      <section id="method" class="info-grid">
         <article class="panel">
-          <span class="section-kicker">Hosted API</span>
-          <h2>Designed for agents and workflows</h2>
-          <p>
-            The MVP includes a Cloudflare Pages Function contract at <code>POST /api/verify</code>.
-            Future OKX.AI ASP and A2MCP integrations can call the same verifier payload.
-          </p>
-          <pre class="code-block">POST /api/verify
-{
-  "jobId": "job_001",
-  "taskType": "smart_contract_audit",
-  "taskDescription": "...",
-  "deliverableText": "..."
-}</pre>
+          <span class="section-kicker" data-i18n="methodKicker">Review method</span>
+          <h2 data-i18n="methodTitle">Transparent review logic</h2>
+          <p data-i18n="methodDesc">The public demo uses requirement extraction, task templates, and deterministic coverage checks. Production review can add AI-assisted semantic analysis and evidence mapping.</p>
         </article>
-        <article id="asp" class="panel">
-          <span class="section-kicker">ASP listing</span>
-          <h2>AgentProof Deliverable Verification Report</h2>
-          <p>
-            Service type: <strong>A2A</strong>. Users provide the Job ID, task description,
-            ASP promise, deliverable text or files, and concerns. AgentProof returns a structured
-            acceptance report and evidence-style reports pack.
-          </p>
-          <div class="asp-tags">
-            <span>0.5 USDT suggested fee</span>
-            <span>A2A first</span>
-            <span>A2MCP later</span>
-          </div>
+        <article class="panel">
+          <span class="section-kicker" data-i18n="boundaryKicker">Boundary</span>
+          <h2 data-i18n="boundaryTitle">Review assistant, not a judge</h2>
+          <p data-i18n="boundaryDesc">AgentProof prepares acceptance review notes and response drafts. The user remains responsible for final acceptance, rejection, or dispute decisions.</p>
         </article>
       </section>
     </div>
